@@ -1,4 +1,7 @@
 import streamlit as st
 st.title("admin")
 with st.sidebar:
-    st.button("Logout", on_click=lambda: st.query_params.update({'logged_in': "None"}))
+    if st.button("Logout", icon=":material/logout:"):
+        st.session_state.clear()
+        st.query_params.clear()
+        st.rerun()

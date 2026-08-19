@@ -6,15 +6,16 @@ admin = st.Page("dashboards/admin.py", title="Admin Dashboard", icon=":material/
 coach = st.Page("dashboards/coach.py", title="Coach Dashboard", icon=":material/school:")
 student = st.Page("dashboards/student.py", title="Student Dashboard", icon=":material/school:")
 
-if 'logged_in' not in st.query_params:
-    st.query_params['logged_in'] = "None"
+if 'role' not in st.query_params:
+    st.query_params['role'] = 'none'
 
 # Checks login state and sends user to corresponding pages
-if st.query_params['logged_in'] == "None":
-    st.navigation([login]).run()
-elif st.query_params['logged_in'] == "Admin":
+role = st.query_params["role"]
+if role == "admin":
     st.navigation([admin]).run()
-elif st.query_params['logged_in'] == "Coach":
+elif role == "coach":
     st.navigation([coach]).run()
-elif st.query_params['logged_in'] == "Student":
+elif role == "student":
     st.navigation([student]).run()
+else:
+    st.navigation([login]).run()

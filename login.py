@@ -1,24 +1,25 @@
 import streamlit as st
+import firebase
 st.title("Welcome!", text_alignment="center")
 
-selection = st.segmented_control(
-    "Login as:",
-    options=["Admin", "Coach", "Student"],
-    selection_mode="single",
-    required=True,
-    default="Admin"
-)
-
-userInput = st.text_input("Username", type="default")
+emailInput = st.text_input("Email", type="default")
 passwordInput = st.text_input("Password", type="password")
 
 if st.button("Login", type="primary", icon=":material/login:"):
-    if selection == "Admin":
-        st.query_params['logged_in'] = "Admin"
+    result = firebase.login(emailInput, passwordInput)
+    if result:
+        st.query_params["uid"] = result["localId"]
+        st.query_params["id_token"] = result["idToken"]
+        st.query_params["refresh_token"] = result["refreshToken"]
+
+        profile = firebase.getRole(
+            result["localId"],
+            result["idToken"]
+        )
+
+        st.query_params["role"] = profile["role"]
+
         st.rerun()
-    elif selection == "Coach":
-        st.query_params['logged_in'] = "Coach"
-        st.rerun()
-    elif selection == "Student":
-        st.query_params['logged_in'] = "Student"
-        st.rerun()
+    else:
+        st.error("Invalid email or password.")
+
