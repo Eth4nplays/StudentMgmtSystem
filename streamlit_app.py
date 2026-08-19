@@ -1,8 +1,8 @@
 import streamlit as st
-login = st.Page("login.py", title="Create entry", icon=":material/add_circle:")
-admin = st.Page("dashboards/admin.py", title="Create entry", icon=":material/add_circle:")
-coach = st.Page("dashboards/coach.py", title="Create entry", icon=":material/add_circle:")
-student = st.Page("dashboards/student.py", title="Create entry", icon=":material/add_circle:")
+login = st.Page("login.py", title="School Activity Management System", icon=":material/school:")
+admin = st.Page("dashboards/admin.py", title="Admin Dashboard", icon=":material/school:")
+coach = st.Page("dashboards/coach.py", title="Coach Dashboard", icon=":material/school:")
+student = st.Page("dashboards/student.py", title="Student Dashboard", icon=":material/school:")
 
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = "None"

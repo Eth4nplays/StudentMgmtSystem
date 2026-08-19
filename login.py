@@ -1,7 +1,5 @@
 import streamlit as st
-
-st.title("Welcome!")
-
+st.title("Welcome!", text_alignment="center")
 
 selection = st.segmented_control(
     "Login as:",
@@ -13,6 +11,7 @@ selection = st.segmented_control(
 
 userInput = st.text_input("Username", type="default")
 passwordInput = st.text_input("Password", type="password")
+
 
 if st.button("Login", type="primary", icon=":material/login:"):
     if selection == "Admin":
