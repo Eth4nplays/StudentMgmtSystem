@@ -12,14 +12,13 @@ selection = st.segmented_control(
 userInput = st.text_input("Username", type="default")
 passwordInput = st.text_input("Password", type="password")
 
-
 if st.button("Login", type="primary", icon=":material/login:"):
     if selection == "Admin":
-        st.session_state['logged_in'] = "Admin"
+        st.query_params['logged_in'] = "Admin"
         st.rerun()
     elif selection == "Coach":
-        st.session_state['logged_in'] = "Coach"
+        st.query_params['logged_in'] = "Coach"
         st.rerun()
     elif selection == "Student":
-        st.session_state['logged_in'] = "Student"
+        st.query_params['logged_in'] = "Student"
         st.rerun()
