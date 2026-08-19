@@ -1,8 +1,6 @@
 import streamlit as st
-import sqlite3
-accounts = sqlite3.connect("users.db")
-cur = accounts.cursor()
-st.title("hi")
+
+st.title("Welcome!")
 
 
 selection = st.segmented_control(
@@ -16,7 +14,7 @@ selection = st.segmented_control(
 userInput = st.text_input("Username", type="default")
 passwordInput = st.text_input("Password", type="password")
 
-if st.button("Login"):
+if st.button("Login", type="primary", icon=":material/login:"):
     if selection == "Admin":
         st.session_state['logged_in'] = "Admin"
         st.rerun()
