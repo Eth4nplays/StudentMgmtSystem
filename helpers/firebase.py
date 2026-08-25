@@ -44,7 +44,6 @@ def getRole(uid, id_token):
     )
 
     response = requests.get(url)
-
     if response.ok:
         return response.json()
 

@@ -1,4 +1,6 @@
 import streamlit as st
+from helpers.cookies import *
+import helpers.firebase as firebase
 
 # App Pages
 login = st.Page("login.py", title="School Activity Management System", icon=":material/school:")
@@ -6,11 +8,29 @@ admin = st.Page("dashboards/admin.py", title="Admin Dashboard", icon=":material/
 coach = st.Page("dashboards/coach.py", title="Coach Dashboard", icon=":material/school:")
 student = st.Page("dashboards/student.py", title="Student Dashboard", icon=":material/school:")
 
-if 'role' not in st.query_params:
-    st.query_params['role'] = 'none'
-
 # Checks login state and sends user to corresponding pages
-role = st.query_params["role"]
+if 'uid' not in st.session_state:
+    st.session_state['uid'] = 'none'
+if 'token' not in st.session_state:
+    st.session_state['token'] = 'none'
+
+cookie_manager.get_all()
+profile = firebase.getRole(
+            getCookies("uid"),
+            getCookies("token")
+        )
+if profile == None:
+    profile = firebase.getRole(
+            st.session_state['uid'],
+            st.session_state['token']
+        )
+    if profile == None:
+        role = "none"
+    else:
+        role = profile["role"]
+else:
+    role = profile["role"]
+
 if role == "admin":
     st.navigation([admin]).run()
 elif role == "coach":

@@ -6,6 +6,9 @@ A web application for managing after-school activities with different user roles
 You must have installed:
 - Python 3
 - Git
+Dependencies for Python:
+- extra-streamlit-components
+- streamlit
 ## Cloning the repo
 1) Clone the repo
 ```bash
@@ -26,21 +29,7 @@ api_key = "apiKeyHere67676767676767"
 database_url = "https://your-project-default-rtdb.firebaseio.com"
 ```
 ## Hosting the application
-1) Activating the environment
-Run either of these depending on your OS:
-```powershell
-# Windows command prompt
-.venv\Scripts\activate.bat
-```
-```powershell
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
-```
-```bash
-# macOS and Linux
-source .venv/bin/activate
-```
-2) Running the program
+1) Running the program
 Run the following:
 ```bash
 python -m streamlit run StudentMgmtSystem
