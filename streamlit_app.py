@@ -14,7 +14,7 @@ if 'uid' not in st.session_state:
 if 'token' not in st.session_state:
     st.session_state['token'] = 'none'
 
-cookie_manager.get_all()
+cookie_manager.get_all("mainProfileGet")
 profile = firebase.getRole(
             getCookies("uid"),
             getCookies("token")
@@ -32,10 +32,17 @@ else:
     role = profile["role"]
 
 if role == "admin":
-    st.navigation([admin]).run()
+    manageAccount = st.Page("dashboards/admin/manageAccounts.py", title="Manage Accounts", icon=":material/manage_accounts:")
+    pg = st.navigation([admin, manageAccount])
+    pg.run()
 elif role == "coach":
     st.navigation([coach]).run()
 elif role == "student":
     st.navigation([student]).run()
 else:
     st.navigation([login]).run()
+
+if role == "admin" or role == "coach" or role == "student":
+    with st.sidebar:
+        if st.button("Logout", icon=":material/logout:", key="logout"):
+            logout()
