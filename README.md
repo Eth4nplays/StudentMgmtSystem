@@ -6,6 +6,7 @@ A web application for managing after-school activities with different user roles
 You must have installed:
 - Python 3
 - Git
+
 Dependencies for Python:
 - extra-streamlit-components
 - streamlit
