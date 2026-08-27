@@ -2,13 +2,11 @@ import streamlit as st
 from helpers.cookies import *
 import helpers.firebase as firebase
 
-# App Pages
-login = st.Page("login.py", title="School Activity Management System", icon=":material/school:")
-admin = st.Page("dashboards/admin.py", title="Admin Dashboard", icon=":material/school:")
-coach = st.Page("dashboards/coach.py", title="Coach Dashboard", icon=":material/school:")
-student = st.Page("dashboards/student.py", title="Student Dashboard", icon=":material/school:")
 
-# Checks login state and sends user to corresponding pages
+
+login = st.Page("login.py", title="School Activity Management System", icon=":material/school:")
+
+# Gets authentication information and get user role
 if 'uid' not in st.session_state:
     st.session_state['uid'] = 'none'
 if 'token' not in st.session_state:
@@ -31,17 +29,28 @@ if profile == None:
 else:
     role = profile["role"]
 
+# Based on user role, send user to corresponding pages
+# page declaration is added here becasue to ensure that users of other roles cant access restricted pages 
 if role == "admin":
+    admin = st.Page("dashboards/admin.py", title="Dashboard", icon=":material/school:")
     manageAccount = st.Page("dashboards/admin/manageAccounts.py", title="Manage Accounts", icon=":material/manage_accounts:")
-    pg = st.navigation([admin, manageAccount])
+    announcements = st.Page("dashboards/admin/announcements.py", title="Announcements", icon=":material/campaign:")
+    reports = st.Page("dashboards/admin/reports.py", title="Reports", icon=":material/analytics:")
+    schedule = st.Page("dashboards/admin/schedule.py", title="Schedules", icon=":material/calendar_month:")
+    activities = st.Page("dashboards/admin/activities.py", title="Activities", icon=":material/directions_run:")
+
+    pg = st.navigation({"Admin": [admin, manageAccount, announcements], "Classes": [reports, schedule, activities]})
     pg.run()
 elif role == "coach":
-    st.navigation([coach]).run()
+    coach = st.Page("dashboards/coach.py", title="Dashboard", icon=":material/school:")
+    st.navigation([coach])
 elif role == "student":
-    st.navigation([student]).run()
+    student = st.Page("dashboards/student.py", title="Dashboard", icon=":material/school:")
+    st.navigation([student])
 else:
     st.navigation([login]).run()
 
+# if user is logged in, add logout butotn in sidebar
 if role == "admin" or role == "coach" or role == "student":
     with st.sidebar:
         if st.button("Logout", icon=":material/logout:", key="logout"):
