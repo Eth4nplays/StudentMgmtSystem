@@ -13,12 +13,12 @@ if 'token' not in st.session_state:
     st.session_state['token'] = 'none'
 
 cookie_manager.get_all("mainProfileGet")
-profile = firebase.getRole(
+profile = firebase.getData(
             getCookies("uid"),
             getCookies("token")
         )
 if profile == None:
-    profile = firebase.getRole(
+    profile = firebase.getData(
             st.session_state['uid'],
             st.session_state['token']
         )
