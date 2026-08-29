@@ -1,8 +1,8 @@
 import streamlit as st
 from helpers.cookies import *
 import helpers.firebase as firebase
-
-
+import firebase_admin
+from firebase_admin import credentials
 
 login = st.Page("login.py", title="School Activity Management System", icon=":material/school:")
 
@@ -43,10 +43,12 @@ if role == "admin":
     pg.run()
 elif role == "coach":
     coach = st.Page("dashboards/coach.py", title="Dashboard", icon=":material/school:")
-    st.navigation([coach])
+    pg = st.navigation([coach])
+    pg.run()
 elif role == "student":
     student = st.Page("dashboards/student.py", title="Dashboard", icon=":material/school:")
-    st.navigation([student])
+    pg = st.navigation([student])
+    pg.run()
 else:
     st.navigation([login]).run()
 
@@ -55,3 +57,24 @@ if role == "admin" or role == "coach" or role == "student":
     with st.sidebar:
         if st.button("Logout", icon=":material/logout:", key="logout"):
             logout()
+
+if role == "admin":
+    if not firebase_admin._apps:
+        cred = credentials.Certificate(
+            {
+                "type": st.secrets["firebase_admin"]["type"],
+                "project_id": st.secrets["firebase_admin"]["project_id"],
+                "private_key_id": st.secrets["firebase_admin"]["private_key_id"],
+                "private_key": st.secrets["firebase_admin"]["private_key"],
+                "client_email": st.secrets["firebase_admin"]["client_email"],
+                "client_id": st.secrets["firebase_admin"]["client_id"],
+                "token_uri": st.secrets["firebase_admin"]["token_uri"],
+            }
+        )
+
+        firebase_admin.initialize_app(
+            cred,
+            {
+                "databaseURL": st.secrets["firebase"]["database_url"],
+            },
+        )

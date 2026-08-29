@@ -14,7 +14,7 @@ def fetchAccounts():
 
 @st.dialog("Create account")
 def createAccount():
-    accType = st.segmented_control("User Type", ["Coach", "Student"], default="Coach")
+    accType = st.segmented_control("User Type", ["coach", "student"], default="coach")
     accName = st.text_input("Name")
     accEmail = st.text_input("Email", validate=("^[^@]+@[^@]+.[^@]+$", "Must be a valid email"))
     accPassword = st.text_input("Temporary Password", validate=("^.{6,}$", "Password must have 6 characters"))
@@ -41,7 +41,7 @@ def accountCard(uid, account):
     with st.container(border=True):
         with st.container(horizontal=True, vertical_alignment="center"):
             st.subheader(account["name"])
-            action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Account"])
+            action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Account"], key=f"menu{account["name"]}")
             if action == "Delete Account":
                  deleteAccount(account["name"], uid)
         st.caption(uid)
@@ -62,9 +62,9 @@ coachTab, studentTab = st.tabs(["Coaches", "Students"])
 
 with coachTab:
     for uid, account in accounts.items():
-        if account["role"] == "Coach":
+        if account["role"] == "coach":
             accountCard(uid, account)
 with studentTab:
     for uid, account in accounts.items():
-        if account["role"] == "Student":
+        if account["role"] == "student":
             accountCard(uid, account)

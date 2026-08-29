@@ -1,5 +1,6 @@
 import requests
 import streamlit as st
+from firebase_admin import credentials, auth, db
 
 API_KEY = st.secrets["firebase"]["api_key"]
 
@@ -65,23 +66,13 @@ def createAccount(email, password):
     return None
 
 def deleteAccount(uid):
-    url = (
-        "https://identitytoolkit.googleapis.com/v1/"
-        f"accounts:delete?key={API_KEY}"
-    )
-
-    response = requests.post(
-        url,
-        json={
-            "idToken": uid,
-            "returnSecureToken": True,
-        },
-    )
-
-    if response.ok:
+    try:
+        # Delete Authentication account
+        auth.delete_user(uid)
         return True
 
-    return False
+    except Exception as e:
+        return False
 
 def getData(uid, id_token):
     '''

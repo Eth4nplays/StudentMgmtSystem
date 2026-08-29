@@ -10,6 +10,8 @@ You must have installed:
 Dependencies for Python:
 - extra-streamlit-components
 - streamlit
+- firebase-admin
+
 ## Cloning the repo
 1) Clone the repo
 ```bash
@@ -28,6 +30,16 @@ cd StudentMgmtSystem
 [firebase]
 api_key = "apiKeyHere67676767676767"
 database_url = "https://your-project-default-rtdb.firebaseio.com"
+```
+5) Generate private key of Python Firebase Admin SDK service account from the "Service Accounts" tab of project settings
+6) Paste contents into the `.streamlit/secrets.toml` as:
+```toml
+[firebase_admin]
+"type": "service_account",
+"project_id": "amazingBestProject",
+"private_key_id": "676767abcd67privatekeyhere6767",
+
+...
 ```
 ## Hosting the application
 1) Running the program
