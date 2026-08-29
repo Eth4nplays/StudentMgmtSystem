@@ -64,6 +64,25 @@ def createAccount(email, password):
 
     return None
 
+def deleteAccount(uid):
+    url = (
+        "https://identitytoolkit.googleapis.com/v1/"
+        f"accounts:delete?key={API_KEY}"
+    )
+
+    response = requests.post(
+        url,
+        json={
+            "idToken": uid,
+            "returnSecureToken": True,
+        },
+    )
+
+    if response.ok:
+        return True
+
+    return False
+
 def getData(uid, id_token):
     '''
     checks firebase rtdb for the user role
@@ -80,14 +99,44 @@ def getData(uid, id_token):
 
     return None
 
-def setData(uid, id_token, role):
+def deleteData(uid, id_token):
     url = (
         f"{st.secrets['firebase']['database_url']}"
         f"/users/{uid}.json"
         f"?auth={id_token}"
     )
 
-    payload = {"role":role}
+    response = requests.delete(url)
+    if response.ok:
+        return True
+
+    return False
+
+def getAccounts(id_token):
+    '''
+    gets all users from Firebase Realtime Database
+    '''
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/users.json"
+        f"?auth={id_token}"
+    )
+
+    response = requests.get(url)
+
+    if response.ok:
+        return response.json()
+
+    return None
+
+def setData(uid, id_token, role, name):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/users/{uid}.json"
+        f"?auth={id_token}"
+    )
+
+    payload = {"role":role, "name":name}
     response = requests.put(url, json=payload)
     if response.ok:
         return response.json()
