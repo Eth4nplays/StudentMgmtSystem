@@ -56,7 +56,6 @@ with st.container(horizontal=True, vertical_alignment="center", width="content")
 
     if st.button("Refresh", type='secondary', icon=":material/refresh:"):
             accounts = fetchAccounts()
-            print(accounts)
 
 coachTab, studentTab = st.tabs(["Coaches", "Students"])
 
