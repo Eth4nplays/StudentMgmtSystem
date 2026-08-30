@@ -120,14 +120,14 @@ def getAccounts(id_token):
 
     return None
 
-def setData(uid, id_token, role, name):
+def setData(uid, id_token, role, name, email):
     url = (
         f"{st.secrets['firebase']['database_url']}"
         f"/users/{uid}.json"
         f"?auth={id_token}"
     )
 
-    payload = {"role":role, "name":name}
+    payload = {"role":role, "name":name, "email":email}
     response = requests.put(url, json=payload)
     if response.ok:
         return response.json()

@@ -21,7 +21,7 @@ def createAccount():
     if st.button("Create Account", type="primary"):
         if accType!="" and accEmail!="" and accName!="" and accPassword!="":
             newAccount = firebase.createAccount(email=accEmail, password=accPassword)
-            firebase.setData(uid=newAccount["localId"], id_token=newAccount["idToken"], role=accType, name=accName)
+            firebase.setData(uid=newAccount["localId"], id_token=newAccount["idToken"], role=accType, name=accName, email=accEmail)
             st.rerun()
         else:
             st.error("All of the fields must be filled in before creating an account")
@@ -41,6 +41,7 @@ def accountCard(uid, account):
     with st.container(border=True):
         with st.container(horizontal=True, vertical_alignment="center"):
             st.subheader(account["name"])
+            st.write(account["email"])
             action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Account"], key=f"menu{account["name"]}")
             if action == "Delete Account":
                  deleteAccount(account["name"], uid)
