@@ -37,8 +37,14 @@ def deleteAccount(accName, uid):
         elif st.button("No", type="primary"):
             st.rerun()
 @st.dialog("Reset Password")
-def resetAccountPassword(accemail):
-     st.write(f"Are you sure you want to reset xyz?")
+def resetAccountPassword(accEmail):
+     st.write(f"Are you sure you want to reset {accEmail}?")
+     with st.container(horizontal=True, vertical_alignment="center"):
+             if st.button("Yes"):
+                 firebase.resetPassword(accEmail)
+                 st.rerun()
+             elif st.button("No", type="primary"):
+                 st.rerun()
 
 def accountCard(uid, account):
     with st.container(border=True):

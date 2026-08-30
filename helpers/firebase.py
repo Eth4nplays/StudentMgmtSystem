@@ -65,6 +65,25 @@ def createAccount(email, password):
 
     return None
 
+def resetPassword(email):
+    url = (
+        "https://identitytoolkit.googleapis.com/v1/"
+        f"accounts:sendOobCode?key={API_KEY}"
+    )
+
+    response = requests.post(
+        url,
+        json={
+            "email": email,
+            "requestType":"PASSWORD_RESET"
+        },
+    )
+
+    if response.ok:
+        return response.json()
+
+    return None
+
 def deleteAccount(uid):
     try:
         # Delete Authentication account
