@@ -3,7 +3,7 @@ from helpers.cookies import *
 import helpers.firebase as firebase
 import firebase_admin
 from firebase_admin import credentials
-
+st.set_option("client.toolbarMode", "viewer")
 login = st.Page("login.py", title="School Activity Management System", icon=":material/school:")
 
 # Gets authentication information and get user role
