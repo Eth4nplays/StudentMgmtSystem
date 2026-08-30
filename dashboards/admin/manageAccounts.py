@@ -46,7 +46,9 @@ def accountCard(uid, account):
             st.subheader(account["name"])
             action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Account","Reset Password"], key=f"menu{account["name"]}")
             if action == "Delete Account":
-                 deleteAccount(account["name"], uid)
+                deleteAccount(account["name"], uid)
+            if action == "Reset Password":
+                resetAccountPassword("accountemail")
         st.caption(uid)
 
 accounts = fetchAccounts()
