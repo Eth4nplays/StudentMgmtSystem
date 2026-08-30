@@ -36,15 +36,20 @@ def deleteAccount(accName, uid):
             st.rerun()
         elif st.button("No", type="primary"):
             st.rerun()
+@st.dialog("Reset Password")
+def resetAccountPassword(accemail):
+     st.write(f"Are you sure you want to reset xyz?")
 
 def accountCard(uid, account):
     with st.container(border=True):
         with st.container(horizontal=True, vertical_alignment="center"):
             st.subheader(account["name"])
             st.write(account["email"])
-            action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Account"], key=f"menu{account["name"]}")
+            action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Account","Reset Password"], key=f"menu{account["name"]}")
             if action == "Delete Account":
-                 deleteAccount(account["name"], uid)
+                deleteAccount(account["name"], uid)
+            if action == "Reset Password":
+                resetAccountPassword("accountemail")
         st.caption(uid)
 
 accounts = fetchAccounts()
