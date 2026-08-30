@@ -49,7 +49,7 @@ def accountCard(uid, account):
             if action == "Delete Account":
                 deleteAccount(account["name"], uid)
             if action == "Reset Password":
-                resetAccountPassword("accountemail")
+                resetAccountPassword(account["email"])
         st.caption(uid)
 
 accounts = fetchAccounts()
