@@ -44,6 +44,7 @@ def announcementCard(title, contents):
             if action == "Delete Announcement":
                 deleteAnnouncement(title)
         st.write(contents["content"])
+        st.caption(datetime.datetime.strptime(title, "%H %M %m %d %y").strftime("%d %B %Y, %I:%M %p"))
         
 
 with st.container(horizontal=True, vertical_alignment="center", width="content"):
