@@ -153,19 +153,32 @@ def setData(uid, id_token, role, name, email):
 
     return None
 
-def setAnnouncement(id_token, roles, content, title):
+def setAnnouncement(id_token, roles, content, title, date):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/announcements/{date}.json"
+        f"?auth={id_token}"
+    )
+    payload = {"title":title, "content":content, "roles":roles}
+    response = requests.put(url, json=payload)
+    if response.ok:
+        return response.json()
+
+    return response.json()
+
+def deleteAnnouncement(title, id_token):
     url = (
         f"{st.secrets['firebase']['database_url']}"
         f"/announcements/{title}.json"
         f"?auth={id_token}"
     )
 
-    payload = {"title":title, "content":content, "roles":roles}
-    response = requests.put(url, json=payload)
+    response = requests.delete(url)
     if response.ok:
-        return response.json()
+        return True
 
-    return None
+    return False
+
 
 def getAnnouncement(id_token):
     url = (
