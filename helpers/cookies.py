@@ -21,6 +21,5 @@ def logout():
     for i in cookies:
         try:
             cookie_manager.delete(i, f"delete{i}")
-        except Exception as e:
-            st.error(f"Failed to delete {i}: {e}")
-    return True
+        finally:
+            return True
