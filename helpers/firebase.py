@@ -152,3 +152,31 @@ def setData(uid, id_token, role, name, email):
         return response.json()
 
     return None
+
+def setAnnouncement(id_token, roles, content, title):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/announcements/{title}.json"
+        f"?auth={id_token}"
+    )
+
+    payload = {"title":title, "content":content, "roles":roles}
+    response = requests.put(url, json=payload)
+    if response.ok:
+        return response.json()
+
+    return None
+
+def getAnnouncement(id_token):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/announcements.json"
+        f"?auth={id_token}"
+    )
+
+    response = requests.get(url)
+
+    if response.ok:
+        return response.json()
+
+    return None
