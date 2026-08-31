@@ -1,8 +1,10 @@
 import streamlit as st
 import helpers.firebase as firebase
 import helpers.cookies as cookies
-from datetime import datetime
+import datetime
 
+st.page_link("dashboards/student.py", label="Back", icon=":material/arrow_back:")
+st.title("Inbox")
 
 if cookies.getCookies("token") != None:
         userToken = cookies.getCookies("token")
@@ -16,9 +18,8 @@ def announcementCard(title, contents):
 
         with st.container(horizontal=True, vertical_alignment="center"):
             st.subheader(contents["title"])
-            st.write(f"{", ".join(contents["roles"])}")
         st.write(contents["content"])
-        
+        st.caption(datetime.datetime.strptime(title, "%H %M %m %d %y").strftime("%d %B %Y, %I:%M %p"))
 
 with st.container(horizontal=True, vertical_alignment="center", width="content"):
 
@@ -27,6 +28,7 @@ with st.container(horizontal=True, vertical_alignment="center", width="content")
 
 if announcements != None:
     for date, contents in reversed(announcements.items()):
-        announcementCard(date, contents)
+        if "Student" in contents["roles"]:    
+            announcementCard(date, contents)
 else:
      st.write("No announcements yet.")
