@@ -193,3 +193,30 @@ def getAnnouncement(id_token):
         return response.json()
 
     return None
+
+def createClass(id_token, classSchedule, classCode, className, classOwner):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/classes/{className}.json"
+        f"?auth={id_token}"
+    )
+    payload = {"code":classCode, "classSchedule":classSchedule, "classOwner":classOwner}
+    response = requests.put(url, json=payload)
+    if response.ok:
+        return response.json()
+
+    return response.json()
+
+def getClass(id_token, className):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/classes/{className}.json"
+        f"?auth={id_token}"
+    )
+
+    response = requests.get(url)
+
+    if response.ok:
+        return response.json()
+
+    return None
