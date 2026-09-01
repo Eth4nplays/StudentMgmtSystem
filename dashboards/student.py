@@ -3,15 +3,14 @@ import streamlit as st
 import helpers.firebase as firebase
 import helpers.cookies as cookies
 from helpers.imagebuttons import *
-st.title("student")
 
-if cookies.getCookies("token") != None:
-        userToken = cookies.getCookies("token")
+if cookies.getCookies("token") is not None:
+    userToken = cookies.getCookies("token")
 else:
     userToken = st.session_state['token']
 
-if cookies.getCookies("uid") != None:
-        uid = cookies.getCookies("uid")
+if cookies.getCookies("uid") is not None:
+    uid = cookies.getCookies("uid")
 else:
     uid = st.session_state['uid']
 
@@ -39,14 +38,19 @@ if st.button("Join Class"):
 
 def classCard():
     list_of_classes = firebase.getClasses(userToken)
-    for i in list_of_classes.items():
-        with st.container(border=True):
-            with st.container(horizontal=True):
-                st.subheader(i[0], width="stretch")
-                st.caption(f"Code: {i[1]['code']}")
-            st.write(i[1]['classSchedule'])
-            st.button("View Class", key=f"view_{i[0]}", on_click=lambda class_name=i[0]: st.session_state.update({"selected_class": class_name}))
-            st.button("Leave Class", key=f"leave_{i[0]}", on_click=lambda class_name=i[0]: firebase.leaveClass(userToken, class_name, uid))
+    for class_name, class_data in list_of_classes.items():
+        # Check if student is in the class
+        if uid in class_data.get('students', {}):
+            with st.container(border=True):
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.subheader(class_name)
+                    st.caption(f"Code: {class_data['code']}")
+                    st.write(class_data['classSchedule'])
+                with col2:
+                    st.button("View Class", key=f"view_{class_name}", on_click=lambda class_name=class_name: st.session_state.update({"selected_class": class_name}))
+                    st.button("Leave Class", key=f"leave_{class_name}", on_click=lambda class_name=class_name: firebase.leaveClass(userToken, class_name, uid))
+
 classCard()
 
     
