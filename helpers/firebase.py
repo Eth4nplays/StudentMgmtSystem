@@ -220,3 +220,17 @@ def getClass(id_token, className):
         return response.json()
 
     return None
+
+def getClasses(id_token):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/classes.json"
+        f"?auth={id_token}"
+    )
+
+    response = requests.get(url)
+
+    if response.ok:
+        return response.json()
+
+    return None
