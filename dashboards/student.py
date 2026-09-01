@@ -28,6 +28,7 @@ def joinClass():
             result = firebase.joinClass(userToken, classCode, uid)
             if result:
                 st.success("Successfully joined the class!")
+                st.rerun()
             else:
                 st.error("Failed to join the class. Please check the code and try again.")
         else:
