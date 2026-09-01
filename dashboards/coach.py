@@ -6,6 +6,9 @@ import helpers.cookies as cookies
 from helpers.imagebuttons import *
 import random
 
+if 'class_view' not in st.session_state:
+    st.session_state['class_view'] = False
+
 if cookies.getCookies("token") != None:
         userToken = cookies.getCookies("token")
 else:
@@ -15,12 +18,6 @@ if cookies.getCookies("uid") != None:
         uid = cookies.getCookies("uid")
 else:
     uid = st.session_state['uid']
-
-st.title("Welcome, Coach")
-
-imageButtons("dashboards/coach/inbox.py", "assets/inbox.png", 1646, 316)
-
-st.subheader("Your Classes")
 
 @st.dialog("Create Class")
 def createClass():
@@ -47,18 +44,65 @@ def createClass():
         else:
             st.warning("Please fill in all fields.")
 
-if st.button("Create Class"):
-    createClass()
+@st.dialog("Delete Class?")
+def deleteClass(className):
+    st.write(f"Are you sure you want to delete {className}?")
+    with st.container(horizontal=True, vertical_alignment="center"):
+        if st.button("Yes"):
+            firebase.deleteClass(userToken, className)
+            st.rerun()
+        elif st.button("No", type="primary"):
+            st.rerun()
 
-    
-def classCard():
+def viewClass(className):
+    st.session_state.update({"selected_class": className})
+    st.session_state.update({"class_view": True})
+    st.rerun()
+
+def classCard(i):
+    with st.container(border=True):
+        with st.container(horizontal=True, vertical_alignment="center"):
+            st.subheader(i[0], width="content")
+            st.caption(f"Code: {i[1]['code']}")
+            action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Class"], key=f"menu{i[0]}")
+
+            if action == "Delete Class":
+                deleteClass(i[0])
+        if st.button("View Class", key=f"view_{i[0]}"):
+            viewClass(i[0])
+
+
+
+if not st.session_state['class_view']:
+
+    st.title("Welcome, Coach")
+
+    imageButtons("dashboards/coach/inbox.py", "assets/inbox.png", 1646, 316)
+
+    st.subheader("Your Classes")
+                
+    if st.button("Create Class"):
+        createClass()
+
+            
     list_of_classes = firebase.getClasses(userToken)
     for i in list_of_classes.items():
-        with st.container(border=True):
-            with st.container(horizontal=True):
-                st.subheader(i[0], width="stretch")
-                st.caption(f"Code: {i[1]['code']}")
-            st.write(i[1]['classSchedule'])
-            st.button("View Class", key=f"view_{i[0]}", on_click=lambda class_name=i[0]: st.session_state.update({"selected_class": class_name}))
-            st.button("Delete Class", key=f"delete_{i[0]}", on_click=lambda class_name=i[0]: firebase.deleteClass(userToken, class_name))
-classCard()
+        classCard(i)
+
+else:
+    if st.button("Back", type="tertiary", icon=":material/arrow_back:"):
+        st.session_state.update({"class_view": False})
+        st.rerun()
+
+    st.header(st.session_state['selected_class'])
+
+    activities, attendance, schedule, reports = st.tabs(["Activities", "Attendance", "Schedule", "Reports"])
+
+    with schedule:
+        
+        st.subheader("Class Schedule")
+        class_data = firebase.getClass(userToken, st.session_state['selected_class'])
+        if class_data:
+            st.write(class_data["classSchedule"])
+        else:
+            st.error("Failed to retrieve class schedule.")
