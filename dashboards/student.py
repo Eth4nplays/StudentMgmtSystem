@@ -4,6 +4,9 @@ import helpers.firebase as firebase
 import helpers.cookies as cookies
 from helpers.imagebuttons import *
 
+if 'class_view' not in st.session_state:
+    st.session_state['class_view'] = False
+
 if cookies.getCookies("token") is not None:
     userToken = cookies.getCookies("token")
 else:
@@ -14,11 +17,7 @@ if cookies.getCookies("uid") is not None:
 else:
     uid = st.session_state['uid']
 
-st.title("Welcome, Student")
 
-imageButtons("dashboards/student/inbox.py", "assets/inbox.png", 1646, 316)
-
-st.subheader("Your Classes")
 
 @st.dialog("Join Class")
 def joinClass():
@@ -34,10 +33,11 @@ def joinClass():
         else:
             st.warning("Please enter a class code.")
 
-if st.button("Join Class"):
-    joinClass()
 
-
+def viewClass(className):
+    st.session_state.update({"selected_class": className})
+    st.session_state.update({"class_view": True})
+    st.rerun()
 
 def classCard(i):
     class_name, class_data = i
@@ -53,10 +53,36 @@ def classCard(i):
                     firebase.leaveClass(userToken, class_name, uid)
                     st.rerun()
             st.write(class_data['classSchedule'])
-            st.button("View Class", key=f"view_{class_name}", on_click=lambda class_name=class_name: st.session_state.update({"selected_class": class_name}))
+            if st.button("View Class", key=f"view_{i[0]}"):
+                viewClass(i[0])
 
-list_of_classes = firebase.getClasses(userToken)
-for i in list_of_classes.items():
-    classCard(i)
+if not st.session_state['class_view']:
+    st.title("Welcome, Student")
 
+    imageButtons("dashboards/student/inbox.py", "assets/inbox.png", 1646, 316)
+
+    st.subheader("Your Classes")
     
+    if st.button("Join Class"):
+        joinClass()
+    list_of_classes = firebase.getClasses(userToken)
+    for i in list_of_classes.items():
+        classCard(i)
+
+else:
+    if st.button("Back", type="tertiary", icon=":material/arrow_back:"):
+        st.session_state.update({"class_view": False})
+        st.rerun()
+
+    st.header(st.session_state['selected_class'])
+
+    activities, attendance, schedule, reports = st.tabs(["Activities", "Attendance", "Schedule", "Reports"])
+
+    with schedule:
+        
+        st.subheader("Class Schedule")
+        class_data = firebase.getClass(userToken, st.session_state['selected_class'])
+        if class_data:
+            st.write(class_data["classSchedule"])
+        else:
+            st.error("Failed to retrieve class schedule.")
