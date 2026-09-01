@@ -234,3 +234,16 @@ def getClasses(id_token):
         return response.json()
 
     return None
+
+def deleteClass(id_token, className):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/classes/{className}.json"
+        f"?auth={id_token}"
+    )
+
+    response = requests.delete(url)
+    if response.ok:
+        return True
+
+    return False
