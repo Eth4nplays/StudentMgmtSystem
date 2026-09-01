@@ -96,7 +96,7 @@ else:
 
     st.header(st.session_state['selected_class'])
 
-    activities, attendance, schedule, reports = st.tabs(["Activities", "Attendance", "Schedule", "Reports"])
+    activities, attendance, reports, schedule, people = st.tabs(["Activities", "Attendance", "Reports", "Schedule", "People"])
 
     with schedule:
         
