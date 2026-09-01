@@ -3,15 +3,14 @@ import streamlit as st
 import helpers.firebase as firebase
 import helpers.cookies as cookies
 from helpers.imagebuttons import *
-st.title("student")
 
-if cookies.getCookies("token") != None:
-        userToken = cookies.getCookies("token")
+if cookies.getCookies("token") is not None:
+    userToken = cookies.getCookies("token")
 else:
     userToken = st.session_state['token']
 
-if cookies.getCookies("uid") != None:
-        uid = cookies.getCookies("uid")
+if cookies.getCookies("uid") is not None:
+    uid = cookies.getCookies("uid")
 else:
     uid = st.session_state['uid']
 
@@ -29,6 +28,7 @@ def joinClass():
             result = firebase.joinClass(userToken, classCode, uid)
             if result:
                 st.success("Successfully joined the class!")
+                st.rerun()
             else:
                 st.error("Failed to join the class. Please check the code and try again.")
         else:
@@ -37,16 +37,26 @@ def joinClass():
 if st.button("Join Class"):
     joinClass()
 
-def classCard():
-    list_of_classes = firebase.getClasses(userToken)
-    for i in list_of_classes.items():
+
+
+def classCard(i):
+    class_name, class_data = i
+    # Check if student is in the class
+    if uid in class_data.get('students', {}):
         with st.container(border=True):
-            with st.container(horizontal=True):
-                st.subheader(i[0], width="stretch")
-                st.caption(f"Code: {i[1]['code']}")
-            st.write(i[1]['classSchedule'])
-            st.button("View Class", key=f"view_{i[0]}", on_click=lambda class_name=i[0]: st.session_state.update({"selected_class": class_name}))
-            st.button("Leave Class", key=f"leave_{i[0]}", on_click=lambda class_name=i[0]: firebase.leaveClass(userToken, class_name, uid))
-classCard()
+            with st.container(horizontal=True, vertical_alignment="center"):
+                st.subheader(class_name, width="content")
+                st.caption(f"Code: {class_data['code']}")
+                action = st.menu_button("", type="tertiary", icon=":material/more_vert:", options=["Leave Class"], key=f"menu{class_name}")
+                
+                if action == "Leave Class":
+                    firebase.leaveClass(userToken, class_name, uid)
+                    st.rerun()
+            st.write(class_data['classSchedule'])
+            st.button("View Class", key=f"view_{class_name}", on_click=lambda class_name=class_name: st.session_state.update({"selected_class": class_name}))
+
+list_of_classes = firebase.getClasses(userToken)
+for i in list_of_classes.items():
+    classCard(i)
 
     
