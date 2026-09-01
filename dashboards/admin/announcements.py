@@ -39,7 +39,7 @@ def announcementCard(title, contents):
 
         with st.container(horizontal=True, vertical_alignment="center"):
             st.subheader(contents["title"])
-            st.write(f"{", ".join(contents["roles"])}")
+            st.write(f"Sent to {", ".join(contents["roles"])}")
             action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Announcement"], key=f"menu{title}")
             if action == "Delete Announcement":
                 deleteAnnouncement(title)
