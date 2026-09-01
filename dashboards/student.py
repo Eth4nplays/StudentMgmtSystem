@@ -37,21 +37,26 @@ def joinClass():
 if st.button("Join Class"):
     joinClass()
 
-def classCard():
-    list_of_classes = firebase.getClasses(userToken)
-    for class_name, class_data in list_of_classes.items():
-        # Check if student is in the class
-        if uid in class_data.get('students', {}):
-            with st.container(border=True):
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    st.subheader(class_name)
-                    st.caption(f"Code: {class_data['code']}")
-                    st.write(class_data['classSchedule'])
-                with col2:
-                    st.button("View Class", key=f"view_{class_name}", on_click=lambda class_name=class_name: st.session_state.update({"selected_class": class_name}))
-                    st.button("Leave Class", key=f"leave_{class_name}", on_click=lambda class_name=class_name: firebase.leaveClass(userToken, class_name, uid))
 
-classCard()
+
+def classCard(i):
+    class_name, class_data = i
+    # Check if student is in the class
+    if uid in class_data.get('students', {}):
+        with st.container(border=True):
+            with st.container(horizontal=True, vertical_alignment="center"):
+                st.subheader(class_name, width="content")
+                st.caption(f"Code: {class_data['code']}")
+                action = st.menu_button("", type="tertiary", icon=":material/more_vert:", options=["Leave Class"], key=f"menu{class_name}")
+                
+                if action == "Leave Class":
+                    firebase.leaveClass(userToken, class_name, uid)
+                    st.rerun()
+            st.write(class_data['classSchedule'])
+            st.button("View Class", key=f"view_{class_name}", on_click=lambda class_name=class_name: st.session_state.update({"selected_class": class_name}))
+
+list_of_classes = firebase.getClasses(userToken)
+for i in list_of_classes.items():
+    classCard(i)
 
     
