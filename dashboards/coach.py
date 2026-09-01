@@ -49,3 +49,16 @@ def createClass():
 
 if st.button("Create Class"):
     createClass()
+
+    
+def classCard():
+    list_of_classes = firebase.getClasses(userToken)
+    for i in list_of_classes.items():
+        with st.container(border=True):
+            with st.container(horizontal=True):
+                st.subheader(i[0], width="stretch")
+                st.caption(f"Code: {i[1]['code']}")
+            st.write(i[1]['classSchedule'])
+            st.button("View Class", key=f"view_{i[0]}", on_click=lambda class_name=i[0]: st.session_state.update({"selected_class": class_name}))
+            st.button("Delete Class", key=f"delete_{i[0]}", on_click=lambda class_name=i[0]: firebase.deleteClass(userToken, class_name))
+classCard()
