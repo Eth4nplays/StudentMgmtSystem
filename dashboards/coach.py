@@ -3,6 +3,7 @@ import string
 import streamlit as st
 import helpers.firebase as firebase
 import helpers.cookies as cookies
+from helpers.imagebuttons import *
 import random
 
 if cookies.getCookies("token") != None:
@@ -15,7 +16,11 @@ if cookies.getCookies("uid") != None:
 else:
     uid = st.session_state['uid']
 
-st.title("coach")
+st.title("Welcome, Coach")
+
+imageButtons("dashboards/coach/inbox.py", "assets/inbox.png", 1646, 316)
+
+st.subheader("Your Classes")
 
 @st.dialog("Create Class")
 def createClass():
