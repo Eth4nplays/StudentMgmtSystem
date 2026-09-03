@@ -1,4 +1,7 @@
 
+from io import StringIO
+
+import pandas as pd
 import streamlit as st
 import helpers.firebase as firebase
 import helpers.cookies as cookies
@@ -17,7 +20,7 @@ if cookies.getCookies("uid") is not None:
 else:
     uid = st.session_state['uid']
 
-
+profile = firebase.getData(uid, userToken)
 
 @st.dialog("Join Class")
 def joinClass():
@@ -45,31 +48,17 @@ def classCard(i):
     if uid in class_data.get('students', {}):
         with st.container(border=True):
             with st.container(horizontal=True, vertical_alignment="center"):
-                st.subheader(class_name, width="content")
-                st.caption(f"Code: {class_data['code']}")
+                st.subheader(class_name)
+                if st.button("View Class", key=f"view_{i[0]}"):
+                    viewClass(i[0])
                 action = st.menu_button("", type="tertiary", icon=":material/more_vert:", options=["Leave Class"], key=f"menu{class_name}")
                 
                 if action == "Leave Class":
                     firebase.leaveClass(userToken, class_name, uid)
                     st.rerun()
-            st.write(class_data['classSchedule'])
-            if st.button("View Class", key=f"view_{i[0]}"):
-                viewClass(i[0])
+            
 
-if not st.session_state['class_view']:
-    st.title("Welcome, Student")
-
-    imageButtons("dashboards/student/inbox.py", "assets/inbox.png", 1646, 316)
-
-    st.subheader("Your Classes")
-    
-    if st.button("Join Class"):
-        joinClass()
-    list_of_classes = firebase.getClasses(userToken)
-    for i in list_of_classes.items():
-        classCard(i)
-
-else:
+def classViewer():
     if st.button("Back", type="tertiary", icon=":material/arrow_back:"):
         st.session_state.update({"class_view": False})
         st.rerun()
@@ -78,11 +67,65 @@ else:
 
     activities, reports, schedule, people = st.tabs(["Activities", "Reports", "Schedule", "People"])
 
+    class_data = firebase.getClass(userToken, st.session_state['selected_class'])
+    
     with schedule:
-        
         st.subheader("Class Schedule")
-        class_data = firebase.getClass(userToken, st.session_state['selected_class'])
         if class_data:
-            st.write(class_data["classSchedule"])
+            df = pd.read_csv(
+                StringIO(class_data["classSchedule"].replace("\\n", "\n")),
+                header=None,
+                names=["Day", "Start Time", "End Time", "Activity"],
+                skipinitialspace=True
+            )
+    
+            st.dataframe(df, hide_index=True, width="stretch",             
+                            column_config={
+                                "Day": st.column_config.TextColumn(
+                                    "Day",
+                                ),
+                                "Start Time": st.column_config.TimeColumn(
+                                    "Start Time",
+                                    format="hh:mm A",
+                                ),
+                                "End Time": st.column_config.TimeColumn(
+                                    "End Time",
+                                    format="hh:mm A",
+                                ),
+                                "Activity": st.column_config.TextColumn("Activity")
+                            }
+                        )
         else:
             st.error("Failed to retrieve class schedule.")
+    
+    with people:
+        
+        if class_data:
+            st.subheader("Coach")
+            with st.container(horizontal=True, vertical_alignment="center", border=True):
+                st.write(firebase.getData(class_data["classOwner"], userToken)["name"])
+            st.subheader("Students")
+            for i in class_data["students"]:
+                with st.container(horizontal=True, vertical_alignment="center", border=True):
+                    st.write(firebase.getData(i, userToken)["name"])
+        else:
+            st.error("Failed to retrieve class members.")
+
+if not st.session_state['class_view']:
+    st.title(f"Welcome, {profile['name']}")
+
+    imageButtons("dashboards/student/inbox.py", "assets/inbox.png", 1646, 316)
+
+    with st.container(horizontal=True, vertical_alignment="bottom"):
+        st.subheader("Your Classes", width="content")
+        st.divider()
+    
+    list_of_classes = firebase.getClasses(userToken)
+    for i in list_of_classes.items():
+        classCard(i)
+
+    if st.button("Join Class", width="stretch", icon=":material/add:", type="primary"):
+        joinClass()
+
+else:
+    classViewer()

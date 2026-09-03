@@ -207,6 +207,20 @@ def createClass(id_token, classSchedule, classCode, className, classOwner):
 
     return response.json()
 
+def editClass(id_token, className, field, value):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/classes/{className}/{field}.json"
+        f"?auth={id_token}"
+    )
+
+    response = requests.put(url, json=value)
+
+    if response.ok:
+        return response.json()
+
+    response.raise_for_status()
+
 def joinClass(id_token, classCode, studentUID):
     url = (
         f"{st.secrets['firebase']['database_url']}"

@@ -1,3 +1,4 @@
+from io import StringIO
 import string
 
 import streamlit as st
@@ -5,6 +6,8 @@ import helpers.firebase as firebase
 import helpers.cookies as cookies
 from helpers.imagebuttons import *
 import random
+import pandas as pd
+from datetime import time
 
 if 'class_view' not in st.session_state:
     st.session_state['class_view'] = False
@@ -18,6 +21,8 @@ if cookies.getCookies("uid") != None:
         uid = cookies.getCookies("uid")
 else:
     uid = st.session_state['uid']
+
+profile = firebase.getData(uid, userToken)
 
 @st.dialog("Create Class")
 def createClass():
@@ -60,36 +65,86 @@ def viewClass(className):
     st.rerun()
 
 def classCard(i):
-    with st.container(border=True):
-        with st.container(horizontal=True, vertical_alignment="center"):
-            st.subheader(i[0], width="content")
-            st.caption(f"Code: {i[1]['code']}")
-            action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Class"], key=f"menu{i[0]}")
+    # check if the coach actually owns the class
+    if uid in i[1].get('classOwner'):
+        with st.container(border=True):
+            with st.container(horizontal=True, vertical_alignment="center"):
+                st.subheader(i[0], width="content")
+                st.caption(f"Code: {i[1]['code']}")
+                action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Class"], key=f"menu{i[0]}")
 
-            if action == "Delete Class":
-                deleteClass(i[0])
-        if st.button("View Class", key=f"view_{i[0]}"):
-            viewClass(i[0])
+                if action == "Delete Class":
+                    deleteClass(i[0])
+            if st.button("View Class", key=f"view_{i[0]}"):
+                viewClass(i[0])
+
+@st.dialog("Edit Schedule")
+def editSchedule(class_data):
+
+    df = pd.read_csv(
+        StringIO(class_data["classSchedule"].replace("\\n", "\n")),
+        header=None,
+        names=["Day", "Start Time", "End Time", "Activity"],
+        skipinitialspace=True
+    )
+
+    for i in ["Start Time", "End Time"]:
+        df[i] = pd.to_datetime(df[i], format="%H:%M:%S").dt.time
+
+    edited = st.data_editor(
+        df,
+        hide_index=True,
+        width="stretch",
+        num_rows="dynamic",
+        column_config={
+            "Day": st.column_config.SelectboxColumn(
+                "Day",
+                options=[
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday",
+                    "Sunday"
+                ],
+                required=True
+            ),
+            "Start Time": st.column_config.TimeColumn(
+                "Start Time",
+                format="hh:mm A",
+                required=True
+            ),
+            "End Time": st.column_config.TimeColumn(
+                "End Time",
+                format="hh:mm A",
+                required=True
+            ),
+            "Activity": st.column_config.TextColumn("Activity")
+        }
+    )
+
+    if st.button("Submit"):
+        newSchedule = edited.to_csv(
+            index=False,
+            header=False
+        ).strip()
+        result = firebase.editClass(
+            userToken,
+            st.session_state["selected_class"],
+            "classSchedule",
+            newSchedule
+        )
+        if result:
+            st.success("Schedule updated successfully!")
+            st.rerun()
+        else:
+            st.error("Failed to update schedule.")
 
 
 
-if not st.session_state['class_view']:
+def classViewer():
 
-    st.title("Welcome, Coach")
-
-    imageButtons("dashboards/coach/inbox.py", "assets/inbox.png", 1646, 316)
-
-    st.subheader("Your Classes")
-                
-    if st.button("Create Class"):
-        createClass()
-
-            
-    list_of_classes = firebase.getClasses(userToken)
-    for i in list_of_classes.items():
-        classCard(i)
-
-else:
     if st.button("Back", type="tertiary", icon=":material/arrow_back:"):
         st.session_state.update({"class_view": False})
         st.rerun()
@@ -97,12 +152,74 @@ else:
     st.header(st.session_state['selected_class'])
 
     activities, attendance, reports, schedule, people = st.tabs(["Activities", "Attendance", "Reports", "Schedule", "People"])
+    class_data = firebase.getClass(userToken, st.session_state['selected_class'])
 
     with schedule:
-        
-        st.subheader("Class Schedule")
-        class_data = firebase.getClass(userToken, st.session_state['selected_class'])
+        with st.container(horizontal=True, vertical_alignment="center"):
+            st.subheader("Class Schedule")
+            if st.button("Edit", type="secondary", icon=":material/edit:"):
+               editSchedule(class_data)
         if class_data:
-            st.write(class_data["classSchedule"])
+            df = pd.read_csv(
+                StringIO(class_data["classSchedule"].replace("\\n", "\n")),
+                header=None,
+                names=["Day", "Start Time", "End Time", "Activity"],
+                skipinitialspace=True
+            )
+
+            st.dataframe(df, hide_index=True, width="stretch",             
+                            column_config={
+                                "Day": st.column_config.TextColumn(
+                                    "Day",
+                                ),
+                                "Start Time": st.column_config.TimeColumn(
+                                    "Start Time",
+                                    format="hh:mm A",
+                                ),
+                                "End Time": st.column_config.TimeColumn(
+                                    "End Time",
+                                    format="hh:mm A",
+                                ),
+                                "Activity": st.column_config.TextColumn("Activity")
+                            }
+                        )
         else:
             st.error("Failed to retrieve class schedule.")
+
+    with people:
+        
+        if class_data:
+            st.subheader("Coach")
+            with st.container(horizontal=True, vertical_alignment="center", border=True):
+                st.write(firebase.getData(class_data["classOwner"], userToken)["name"])
+            st.subheader("Students")
+            for i in class_data["students"]:
+                with st.container(horizontal=True, vertical_alignment="center", border=True):
+                    st.write(firebase.getData(i, userToken)["name"])
+                    action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Remove Student"], key=f"menu{i[0]}")
+                    if action == "Remove Student":
+                        firebase.leaveClass(userToken, st.session_state['selected_class'], i)
+        else:
+            st.error("Failed to retrieve class members.")
+
+
+
+if not st.session_state['class_view']:
+    st.title(f"Welcome, {profile['name']}")
+
+    imageButtons("dashboards/coach/inbox.py", "assets/inbox.png", 1646, 316)
+    with st.container(horizontal=True, vertical_alignment="bottom"):
+        st.subheader("Your Classes", width="content")
+        st.divider()
+    
+
+            
+    list_of_classes = firebase.getClasses(userToken)
+    for i in list_of_classes.items():
+        classCard(i)
+
+    if st.button("Create Class", width="stretch", icon=":material/add:", type="primary"):
+        createClass()
+
+else:
+    classViewer()
