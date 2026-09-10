@@ -169,14 +169,18 @@ def classViewer():
                                             field=date.strftime("%d-%m-%Y"), 
                                             value=payload))
         except:
-            payload = {}
-            for i in class_data["students"]:
-                payload[firebase.getData(i, userToken)["name"]] = False
-            firebase.editAttendance(id_token=userToken, 
-                                    className=st.session_state['selected_class'], 
-                                    field=date.strftime("%d-%m-%Y"), 
-                                    value=payload)
-            st.rerun()
+            try:
+                payload = {}
+                for i in class_data["students"]:
+                    payload[firebase.getData(i, userToken)["name"]] = False
+                firebase.editAttendance(id_token=userToken, 
+                                        className=st.session_state['selected_class'], 
+                                        field=date.strftime("%d-%m-%Y"), 
+                                        value=payload)
+                st.rerun()
+            except:
+                st.write("Please select a date.")
+
 
     with schedule:
         with st.container(horizontal=True, vertical_alignment="center"):
