@@ -18,7 +18,7 @@ def announcementCard(title, contents):
 
         with st.container(horizontal=True, vertical_alignment="center"):
             st.subheader(contents["title"])
-        st.write(contents["content"])
+        st.markdown(contents["content"])
         st.caption(datetime.datetime.strptime(title, "%H %M %m %d %y").strftime("%d %B %Y, %I:%M %p"))
 
 with st.container(horizontal=True, vertical_alignment="center", width="content"):
