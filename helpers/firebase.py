@@ -221,6 +221,20 @@ def editClass(id_token, className, field, value):
 
     response.raise_for_status()
 
+def editAttendance(id_token, className, field, value):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/classes/{className}/attendance/{field}.json"
+        f"?auth={id_token}"
+    )
+
+    response = requests.put(url, json=value)
+
+    if response.ok:
+        return response.json()
+
+    response.raise_for_status()
+
 def joinClass(id_token, classCode, studentUID):
     url = (
         f"{st.secrets['firebase']['database_url']}"

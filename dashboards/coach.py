@@ -154,6 +154,30 @@ def classViewer():
     activities, attendance, reports, schedule, people = st.tabs(["Activities", "Attendance", "Reports", "Schedule", "People"])
     class_data = firebase.getClass(userToken, st.session_state['selected_class'])
 
+    with attendance:
+        st.subheader("Attendance")
+        date = st.date_input("Select Date", value=None, min_value=None, max_value=None, key="attendance_date", format="DD-MM-YYYY")
+        try:
+            with st.form("attendance_form"):
+                edited_df = st.data_editor(pd.DataFrame(
+                    class_data["attendance"][date.strftime("%d-%m-%Y")].items(),
+                    columns=["Student", "Attendance"]), hide_index=True, width="stretch", key=f"attendance_editor_{date.strftime("%d-%m-%Y")}")
+                if st.form_submit_button("Submit"):
+                    payload = edited_df.set_index("Student").to_dict()["Attendance"]
+                    print(firebase.editAttendance(id_token=userToken, 
+                                            className=st.session_state['selected_class'], 
+                                            field=date.strftime("%d-%m-%Y"), 
+                                            value=payload))
+        except:
+            payload = {}
+            for i in class_data["students"]:
+                payload[firebase.getData(i, userToken)["name"]] = False
+            firebase.editAttendance(id_token=userToken, 
+                                    className=st.session_state['selected_class'], 
+                                    field=date.strftime("%d-%m-%Y"), 
+                                    value=payload)
+            st.rerun()
+
     with schedule:
         with st.container(horizontal=True, vertical_alignment="center"):
             st.subheader("Class Schedule")
