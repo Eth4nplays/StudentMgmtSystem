@@ -17,3 +17,10 @@ def imageButtons(page, image, width, height):
     </style>
     """, unsafe_allow_html=True)
     st.page_link(page, label=" ")
+
+def image(image, width):
+    st.markdown(
+        f'<img src="{encodeImage(image)}" '
+        f'style="width:{width}px; object-fit:contain;">',
+        unsafe_allow_html=True
+    )
