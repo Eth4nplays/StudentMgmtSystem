@@ -155,10 +155,9 @@ def classViewer():
     class_data = firebase.getClass(userToken, st.session_state['selected_class'])
 
     with attendance:
-        st.subheader("Attendance")
         date = st.date_input("Select Date", value=None, min_value=None, max_value=None, key="attendance_date", format="DD-MM-YYYY")
         try:
-            with st.form("attendance_form"):
+            with st.form("attendance_form", border=False):
                 edited_df = st.data_editor(pd.DataFrame(
                     class_data["attendance"][date.strftime("%d-%m-%Y")].items(),
                     columns=["Student", "Attendance"]), hide_index=True, width="stretch", key=f"attendance_editor_{date.strftime("%d-%m-%Y")}")
@@ -168,6 +167,7 @@ def classViewer():
                                             className=st.session_state['selected_class'], 
                                             field=date.strftime("%d-%m-%Y"), 
                                             value=payload))
+                    st.success("Attendance updated successfully!")
         except:
             try:
                 payload = {}
@@ -179,12 +179,11 @@ def classViewer():
                                         value=payload)
                 st.rerun()
             except:
-                st.write("Please select a date.")
+                st.error("Please select a date")
 
 
     with schedule:
         with st.container(horizontal=True, vertical_alignment="center"):
-            st.subheader("Class Schedule")
             if st.button("Edit", type="secondary", icon=":material/edit:"):
                editSchedule(class_data)
         if class_data:
@@ -215,7 +214,6 @@ def classViewer():
             st.error("Failed to retrieve class schedule.")
 
     with people:
-        
         if class_data:
             st.subheader("Coach")
             with st.container(horizontal=True, vertical_alignment="center", border=True):

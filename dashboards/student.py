@@ -70,7 +70,6 @@ def classViewer():
     class_data = firebase.getClass(userToken, st.session_state['selected_class'])
     
     with schedule:
-        st.subheader("Class Schedule")
         if class_data:
             df = pd.read_csv(
                 StringIO(class_data["classSchedule"].replace("\\n", "\n")),
