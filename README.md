@@ -54,5 +54,5 @@ database_url = "https://your-project-default-rtdb.firebaseio.com"
 1) Running the program
 Run the following:
 ```bash
-python -m streamlit run StudentMgmtSystem
+python -m streamlit run
 ```
