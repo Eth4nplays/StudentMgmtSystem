@@ -3,6 +3,8 @@ from helpers.cookies import *
 import helpers.firebase as firebase
 import firebase_admin
 from firebase_admin import credentials
+from helpers.imagebuttons import encodeImage
+
 st.set_option("client.toolbarMode", "viewer")
 login = st.Page("login.py", title="School Activity Management System", icon=":material/school:")
 
@@ -57,6 +59,25 @@ else:
 # if user is logged in, add logout butotn in sidebar
 if role == "admin" or role == "coach" or role == "student":
     with st.sidebar:
+        st.markdown(
+            f"""
+            <style>
+                [data-testid="stSidebarNav"]::before {{
+                    content: "";
+                    display: block;
+                    width: 250px;
+                    height: 150px;
+                    margin-bottom: 20px;
+
+                    background-image: url({encodeImage("assets/logo.png")});
+                    background-size: contain;
+                    background-repeat: no-repeat;
+                    background-position: center;
+                }}
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
         if st.button("Logout", icon=":material/logout:", key="logout"):
             logout()
 
