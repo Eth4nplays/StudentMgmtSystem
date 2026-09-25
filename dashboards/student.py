@@ -20,8 +20,6 @@ if cookies.getCookies("uid") is not None:
 else:
     uid = st.session_state['uid']
 
-profile = firebase.getData(uid, userToken)
-
 @st.dialog("Join Class")
 def joinClass():
     classCode = st.text_input("Enter Class Code")
@@ -111,7 +109,7 @@ def classViewer():
             st.error("Failed to retrieve class members.")
 
 if not st.session_state['class_view']:
-    st.title(f"Welcome, {profile['name']}")
+    st.title(f"Welcome, {st.session_state['profile']['name']}")
 
     imageButtons("dashboards/student/inbox.py", "assets/inbox.png", 1646, 316)
 

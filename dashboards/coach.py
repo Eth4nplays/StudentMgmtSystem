@@ -22,8 +22,6 @@ if cookies.getCookies("uid") != None:
 else:
     uid = st.session_state['uid']
 
-profile = firebase.getData(uid, userToken)
-
 @st.dialog("Create Class")
 def createClass():
     className = st.text_input("Class Name")
@@ -303,7 +301,7 @@ def classViewer():
 
 
 if not st.session_state['class_view']:
-    st.title(f"Welcome, {profile['name']}")
+    st.title(f"Welcome, {st.session_state['profile']['name']}")
 
     imageButtons("dashboards/coach/inbox.py", "assets/inbox.png", 1646, 316)
     with st.container(horizontal=True, vertical_alignment="bottom"):
