@@ -289,13 +289,21 @@ def classViewer():
         # show a graph depicting class attendance
         st.subheader("Class Attendance Report")
         #show graph taking data from attendance
+
+        attendance_report_dict = {}
         
+        for i in (class_data["attendance"]):
+            count = 0
+            for j in class_data["attendance"][i]:
+                if class_data["attendance"][i][j] == True:
+                    count += 1
+            attendance_report_dict[i] = count
 
-        df = pd.DataFrame(
-            class_data["classSchedule"]
-        )
+        df = pd.DataFrame(list(attendance_report_dict.items()), columns=["Date", "Number of Students"])
 
-        st.line_chart(df, x="col1", y="col2", color="col3")
+        st.bar_chart(df, x="Date", y="Number of Students", color="Number of Students")
+
+        st.subheader("Class Academic report")
 
 
 
