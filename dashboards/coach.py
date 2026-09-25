@@ -27,13 +27,60 @@ profile = firebase.getData(uid, userToken)
 @st.dialog("Create Class")
 def createClass():
     className = st.text_input("Class Name")
+
+    df = pd.read_csv(
+            StringIO(""),
+            header=None,
+            names=["Day", "Start Time", "End Time", "Activity"],
+            skipinitialspace=True
+        )
     
-    classSchedule = st.text_area("Class Schedule")
+    for i in ["Start Time", "End Time"]:
+        df[i] = pd.to_datetime(df[i], format="%H:%M:%S").dt.time
+
+    classSchedule = st.data_editor(
+            df,
+            hide_index=True,
+            width="stretch",
+            num_rows="dynamic",
+            column_config={
+                "Day": st.column_config.SelectboxColumn(
+                    "Day",
+                    options=[
+                        "Monday",
+                        "Tuesday",
+                        "Wednesday",
+                        "Thursday",
+                        "Friday",
+                        "Saturday",
+                        "Sunday"
+                    ],
+                    required=True
+                ),
+                "Start Time": st.column_config.TimeColumn(
+                    "Start Time",
+                    format="hh:mm A",
+                    required=True
+                ),
+                "End Time": st.column_config.TimeColumn(
+                    "End Time",
+                    format="hh:mm A",
+                    required=True
+                ),
+                "Activity": st.column_config.TextColumn("Activity")
+            }
+        )
+    
     if st.button("Create Class"):
-        if className and classSchedule:
+        Schedule = classSchedule.to_csv(
+                        index=False,
+                        header=False
+                    ).strip()
+        if className and Schedule:
+            
             result = firebase.createClass(
                 userToken,
-                classSchedule,
+                Schedule,
                 ''.join(random.choices(string.ascii_letters + string.digits, k=6)).upper(),
                 className,
                 uid
@@ -44,6 +91,8 @@ def createClass():
                 st.write("Class Code:")
                 if class_data:
                     st.code(class_data["code"], width="content")
+
+                st.rerun()
             else:
                 st.error("Failed to create class. Please try again.")
         else:
@@ -80,7 +129,9 @@ def classCard(i):
 
 @st.dialog("Edit Schedule")
 def editSchedule(class_data):
+    # shows a table to edits the class schedule using and saves to firebase
 
+    
     df = pd.read_csv(
         StringIO(class_data["classSchedule"].replace("\\n", "\n")),
         header=None,
@@ -129,6 +180,7 @@ def editSchedule(class_data):
             index=False,
             header=False
         ).strip()
+        
         result = firebase.editClass(
             userToken,
             st.session_state["selected_class"],
@@ -219,12 +271,15 @@ def classViewer():
             with st.container(horizontal=True, vertical_alignment="center", border=True):
                 st.write(firebase.getData(class_data["classOwner"], userToken)["name"])
             st.subheader("Students")
-            for i in class_data["students"]:
-                with st.container(horizontal=True, vertical_alignment="center", border=True):
-                    st.write(firebase.getData(i, userToken)["name"])
-                    action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Remove Student"], key=f"menu{i[0]}")
-                    if action == "Remove Student":
-                        firebase.leaveClass(userToken, st.session_state['selected_class'], i)
+            try:
+                for i in class_data["students"]:
+                    with st.container(horizontal=True, vertical_alignment="center", border=True):
+                        st.write(firebase.getData(i, userToken)["name"])
+                        action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Remove Student"], key=f"menu{i[0]}")
+                        if action == "Remove Student":
+                            firebase.leaveClass(userToken, st.session_state['selected_class'], i)
+            except:
+                st.write("No students found")
         else:
             st.error("Failed to retrieve class members.")
 
