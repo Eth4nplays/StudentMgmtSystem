@@ -287,14 +287,11 @@ def classViewer():
     with reports:
         # show a graph depicting class attendance
         st.subheader("Class Attendance Report")
+        #show graph taking data from attendance
         
 
         df = pd.DataFrame(
-            {
-                "col1": list(range(20)) * 3,
-                "col2": rng(0).standard_normal(60),
-                "col3": ["a"] * 20 + ["b"] * 20 + ["c"] * 20,
-            }
+            class_data["classSchedule"]
         )
 
         st.line_chart(df, x="col1", y="col2", color="col3")
