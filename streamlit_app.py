@@ -14,16 +14,21 @@ if 'uid' not in st.session_state:
 if 'token' not in st.session_state:
     st.session_state['token'] = 'none'
 
+# get the user profile and save it in session state
 cookie_manager.get_all("mainProfileGet")
-profile = firebase.getData(
-            getCookies("uid"),
-            getCookies("token")
-        )
+if 'profile' not in st.session_state:
+    profile = firebase.getData(
+                getCookies("uid"),
+                getCookies("token")
+            )
+    st.session_state['profile'] = profile
+profile = st.session_state['profile']
 if profile == None:
     profile = firebase.getData(
             st.session_state['uid'],
             st.session_state['token']
         )
+    st.session_state['profile'] = profile
     if profile == None:
         role = "none"
     else:
