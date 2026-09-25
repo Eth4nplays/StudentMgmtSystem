@@ -61,9 +61,10 @@ elif role == "student":
 else:
     st.navigation([login]).run()
 
-# if user is logged in, add logout butotn in sidebar
+# sidebar contents for all logged in users
 if role == "admin" or role == "coach" or role == "student":
     with st.sidebar:
+        # show the logo on the top of sidebar
         st.markdown(
             f"""
             <style>
@@ -86,6 +87,7 @@ if role == "admin" or role == "coach" or role == "student":
         if st.button("Logout", icon=":material/logout:", key="logout"):
             logout()
 
+# initialize firebase admin if the user is logged in as an admin
 if role == "admin":
     if not firebase_admin._apps:
         cred = credentials.Certificate(
