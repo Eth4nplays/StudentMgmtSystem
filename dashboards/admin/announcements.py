@@ -15,13 +15,43 @@ announcements = firebase.getAnnouncement(userToken)
 
 @st.dialog("Create Announcement")
 def createAnnouncement():
-    title = st.text_input("Title")
-    content = st.text_area("Contents")
-    roles = st.pills("Roles", ["Student", "Coach"], selection_mode="multi")
-    if st.button("Submit", type="primary"):
-        print(firebase.setAnnouncement(id_token=userToken, roles=roles, content=content, title=title, date=datetime.datetime.now().strftime("%H %M %m %d %y")))
+    contents, recepients = st.tabs(["Content", "Recepients"])
+    with contents:
+        title = st.text_input("Title")
+        content = st.text_area("Contents")
+        accounts = firebase.getAccounts(id_token=userToken)
+    with recepients:
+        studentList = []
+        for i in accounts:
+            if accounts[i]["role"] == "student":
+                studentList.append(accounts[i]["name"])
+        allStudents = st.checkbox("All Students", key="allStudents")
+        students = st.multiselect("Students", studentList, disabled=allStudents)
         
-        st.rerun()
+        coachList = []
+        for i in accounts:
+            if accounts[i]["role"] == "coach":
+                coachList.append(accounts[i]["name"])
+        allCoaches = st.checkbox("All Coaches", key="allCoaches")
+        coaches = st.multiselect("Coaches", coachList, disabled=allCoaches)
+        
+    
+    if st.button("Submit", type="primary"):
+        roles = []
+        if allCoaches:
+             roles.append("Coach")
+        else:
+             roles.extend(coaches)
+        if allStudents:
+            roles.append("Student")
+        else:
+            roles.extend(students)
+        if title and roles and content:
+            firebase.setAnnouncement(id_token=userToken, roles=roles, content=content, title=title, date=datetime.datetime.now().strftime("%y %m %d %H %M"))
+            st.rerun()
+        else:
+             st.warning("Please input all fields")
+        
 
 @st.dialog("Delete account")
 def deleteAnnouncement(title):
@@ -44,7 +74,7 @@ def announcementCard(title, contents):
             if action == "Delete Announcement":
                 deleteAnnouncement(title)
         st.write(contents["content"])
-        st.caption(datetime.datetime.strptime(title, "%H %M %m %d %y").strftime("%d %B %Y, %I:%M %p"))
+        st.caption(datetime.datetime.strptime(title, "%y %m %d %H %M").strftime("%d %B %Y, %I:%M %p"))
         
 
 with st.container(horizontal=True, vertical_alignment="center", width="content"):

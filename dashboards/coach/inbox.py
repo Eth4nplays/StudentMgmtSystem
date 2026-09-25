@@ -19,7 +19,7 @@ def announcementCard(title, contents):
         with st.container(horizontal=True, vertical_alignment="center"):
             st.subheader(contents["title"])
         st.markdown(contents["content"])
-        st.caption(datetime.datetime.strptime(title, "%H %M %m %d %y").strftime("%d %B %Y, %I:%M %p"))
+        st.caption(datetime.datetime.strptime(title, "%y %m %d %H %M").strftime("%d %B %Y, %I:%M %p"))
 
 with st.container(horizontal=True, vertical_alignment="center", width="content"):
 
@@ -28,7 +28,7 @@ with st.container(horizontal=True, vertical_alignment="center", width="content")
 
 if announcements != None:
     for date, contents in reversed(announcements.items()):
-        if "Coach" in contents["roles"]:    
+        if "Student" in contents["roles"] or st.session_state['profile']['name'] in contents["roles"]:    
             announcementCard(date, contents)
 else:
      st.write("No announcements yet.")
