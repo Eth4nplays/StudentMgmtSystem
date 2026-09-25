@@ -11,14 +11,13 @@ else:
     userToken = st.session_state['token']
 
 def classCard(i):
-    # check if the coach actually owns the class
     with st.container(border=True):
         class_data = firebase.getClass(userToken, i[0])    
 
         with st.container(horizontal=True, vertical_alignment="center"):
             st.subheader(i[0], width="content")
             st.caption(f"Coach: {firebase.getData(class_data["classOwner"], userToken)["name"]}")
-            if st.button("Edit", type="secondary", icon=":material/edit:"):
+            if st.button("Edit", type="secondary", icon=":material/edit:", key=f"editSchedule{i}"):
                 editSchedule(class_data, i[0])
         if class_data:
             df = pd.read_csv(
