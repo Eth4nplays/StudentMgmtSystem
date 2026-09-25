@@ -305,6 +305,8 @@ def classViewer():
 
         st.bar_chart(df, x="Date", y="Number of Students", color="Number of Students")
 
+        st.subheader("Class Academic report")
+
 
 
 
