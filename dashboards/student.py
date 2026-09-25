@@ -27,7 +27,7 @@ def joinClass():
     classCode = st.text_input("Enter Class Code")
     if st.button("Join Class"):
         if classCode:
-            result = firebase.joinClass(userToken, classCode, uid)
+            result = firebase.joinClass(userToken, classCode.upper(), uid)
             if result:
                 st.success("Successfully joined the class!")
                 st.rerun()
