@@ -8,6 +8,7 @@ from helpers.imagebuttons import *
 import random
 import pandas as pd
 from datetime import time
+from numpy.random import default_rng as rng
 
 if 'class_view' not in st.session_state:
     st.session_state['class_view'] = False
@@ -282,6 +283,22 @@ def classViewer():
                 st.write("No students found")
         else:
             st.error("Failed to retrieve class members.")
+
+    with reports:
+        # show a graph depicting class attendance
+        st.subheader("Class Attendance Report")
+        
+
+        df = pd.DataFrame(
+            {
+                "col1": list(range(20)) * 3,
+                "col2": rng(0).standard_normal(60),
+                "col3": ["a"] * 20 + ["b"] * 20 + ["c"] * 20,
+            }
+        )
+
+        st.line_chart(df, x="col1", y="col2", color="col3")
+
 
 
 
