@@ -8,7 +8,6 @@ from helpers.imagebuttons import *
 import random
 import pandas as pd
 from datetime import time
-from numpy.random import default_rng as rng
 
 if 'class_view' not in st.session_state:
     st.session_state['class_view'] = False
@@ -210,6 +209,7 @@ def classViewer():
     with attendance:
         date = st.date_input("Select Date", value=None, min_value=None, max_value=None, key="attendance_date", format="DD-MM-YYYY")
         try:
+            # if attendance data is available / if date is selected
             with st.form("attendance_form", border=False):
                 edited_df = st.data_editor(pd.DataFrame(
                     class_data["attendance"][date.strftime("%d-%m-%Y")].items(),
@@ -223,6 +223,8 @@ def classViewer():
                     st.success("Attendance updated successfully!")
         except:
             try:
+                # if date is selected, however attendance data is not available
+                # initialize new attendance data with payload
                 payload = {}
                 for i in class_data["students"]:
                     payload[firebase.getData(i, userToken)["name"]] = False
@@ -231,8 +233,9 @@ def classViewer():
                                         field=date.strftime("%d-%m-%Y"), 
                                         value=payload)
                 st.rerun()
-            except:
-                st.error("Please select a date")
+            except Exception as e:
+                # throw error if date not selected
+                st.error(f"Please select a date: {e}")
 
 
     with schedule:
