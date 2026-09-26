@@ -43,7 +43,8 @@ def viewClass(className):
 def classCard(i):
     class_name, class_data = i
     # Check if student is in the class
-    if uid in class_data.get('students', {}):
+    print(class_data.get('students', {}))
+    if any(student.split()[0] == uid for student in class_data.get('students', [])):
         with st.container(border=True):
             with st.container(horizontal=True, vertical_alignment="center"):
                 st.subheader(class_name)
@@ -63,7 +64,7 @@ def classViewer():
 
     st.header(st.session_state['selected_class'])
 
-    activities, reports, schedule, people = st.tabs(["Activities", "Reports", "Schedule", "People"])
+    activities, reports, schedule, people = st.tabs(["Activities", "Reports", "Schedule", "People"], on_change="rerun")
 
     class_data = firebase.getClass(userToken, st.session_state['selected_class'])
     
@@ -94,19 +95,20 @@ def classViewer():
                         )
         else:
             st.error("Failed to retrieve class schedule.")
-    
-    with people:
-        
-        if class_data:
-            st.subheader("Coach")
-            with st.container(horizontal=True, vertical_alignment="center", border=True):
-                st.write(firebase.getData(class_data["classOwner"], userToken)["name"])
-            st.subheader("Students")
-            for i in class_data["students"]:
+
+    if people.open:
+        with people:
+            
+            if class_data:
+                st.subheader("Coach")
                 with st.container(horizontal=True, vertical_alignment="center", border=True):
-                    st.write(firebase.getData(i, userToken)["name"])
-        else:
-            st.error("Failed to retrieve class members.")
+                    st.write(firebase.getData(class_data["classOwner"], userToken)["name"])
+                st.subheader("Students")
+                for i in class_data["students"]:
+                    with st.container(horizontal=True, vertical_alignment="center", border=True):
+                        st.write(i.split()[1])
+            else:
+                st.error("Failed to retrieve class members.")
 
 if not st.session_state['class_view']:
     st.title(f"Welcome, {st.session_state['profile']['name']}")
