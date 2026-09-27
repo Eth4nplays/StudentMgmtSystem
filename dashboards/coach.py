@@ -201,45 +201,44 @@ def classViewer():
 
     st.header(st.session_state['selected_class'])
 
-    activities, attendance, reports, schedule, people = st.tabs(["Activities", "Attendance", "Reports", "Schedule", "People"])
+    activities, attendance, reports, schedule, people = st.tabs(["Activities", "Attendance", "Reports", "Schedule", "People"], on_change="rerun")
     class_data = firebase.getClass(userToken, st.session_state['selected_class'])
 
     with attendance:
         date = st.date_input("Select Date", value=None, min_value=None, max_value=None, key="attendance_date", format="DD-MM-YYYY")
-        try:
-            # if attendance data is available / if date is selected
-            with st.form("attendance_form", border=False):
-                edited_df = st.data_editor(pd.DataFrame(
-                    class_data["attendance"][date.strftime("%d-%m-%Y")].items(),
-                    columns=["Student", "Attendance"]), hide_index=True, width="stretch", key=f"attendance_editor_{date.strftime("%d-%m-%Y")}")
-                if st.form_submit_button("Submit"):
-                    payload = edited_df.set_index("Student").to_dict()["Attendance"]
-                    print(firebase.editAttendance(id_token=userToken, 
+        if date:
+            try:
+                # if attendance data is available / if date is selected
+                with st.form("attendance_form", border=False):
+                    edited_df = st.data_editor(pd.DataFrame(
+                        class_data["attendance"][date.strftime("%d-%m-%Y")].items(),
+                        columns=["Student", "Attendance"]), hide_index=True, width="stretch", key=f"attendance_editor_{date.strftime("%d-%m-%Y")}")
+                    if st.form_submit_button("Submit"):
+                        payload = edited_df.set_index("Student").to_dict()["Attendance"]
+                        print(firebase.editAttendance(id_token=userToken, 
+                                                className=st.session_state['selected_class'], 
+                                                field=date.strftime("%d-%m-%Y"), 
+                                                value=payload))
+                        st.success("Attendance updated successfully!")
+            except:
+                try:
+                    # if date is selected, however attendance data is not available
+                    # initialize new attendance data with payload
+                    payload = {}
+                    for i in class_data["students"]:
+                        payload[i.split()[1]] = False
+                    firebase.editAttendance(id_token=userToken, 
                                             className=st.session_state['selected_class'], 
                                             field=date.strftime("%d-%m-%Y"), 
-                                            value=payload))
-                    st.success("Attendance updated successfully!")
-        except:
-            try:
-                # if date is selected, however attendance data is not available
-                # initialize new attendance data with payload
-                payload = {}
-                for i in class_data["students"]:
-                    payload[firebase.getData(i, userToken)["name"]] = False
-                firebase.editAttendance(id_token=userToken, 
-                                        className=st.session_state['selected_class'], 
-                                        field=date.strftime("%d-%m-%Y"), 
-                                        value=payload)
-                st.rerun()
-            except Exception as e:
-                # throw error if date not selected
-                st.error(f"Please select a date: {e}")
-
-
+                                            value=payload)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"An error has occured.{e}")
+            
     with schedule:
         with st.container(horizontal=True, vertical_alignment="center"):
             if st.button("Edit", type="secondary", icon=":material/edit:"):
-               editSchedule(class_data)
+                editSchedule(class_data)
         if class_data:
             df = pd.read_csv(
                 StringIO(class_data["classSchedule"].replace("\\n", "\n")),
@@ -271,12 +270,12 @@ def classViewer():
         if class_data:
             st.subheader("Coach")
             with st.container(horizontal=True, vertical_alignment="center", border=True):
-                st.write(firebase.getData(class_data["classOwner"], userToken)["name"])
+                st.write(st.session_state['profile']['name'])
             st.subheader("Students")
             try:
                 for i in class_data["students"]:
                     with st.container(horizontal=True, vertical_alignment="center", border=True):
-                        st.write(firebase.getData(i, userToken)["name"])
+                        st.write(i.split()[1])
                         action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Remove Student"], key=f"menu{i[0]}")
                         if action == "Remove Student":
                             firebase.leaveClass(userToken, st.session_state['selected_class'], i)
@@ -291,19 +290,32 @@ def classViewer():
         #show graph taking data from attendance
 
         attendance_report_dict = {}
+        max_attendance = 0
+        total_attendance = 0
+
+        try:
+            for i in (class_data["attendance"]):
+                count = 0
+                for j in class_data["attendance"][i]:
+                    if class_data["attendance"][i][j] == True:
+                        count += 1
+                        total_attendance += 1
+                    max_attendance += 1
+                attendance_report_dict[i] = count
         
-        for i in (class_data["attendance"]):
-            count = 0
-            for j in class_data["attendance"][i]:
-                if class_data["attendance"][i][j] == True:
-                    count += 1
-            attendance_report_dict[i] = count
 
-        df = pd.DataFrame(list(attendance_report_dict.items()), columns=["Date", "Number of Students"])
+            df = pd.DataFrame(list(attendance_report_dict.items()), columns=["Date", "Number of Students"])
 
-        st.bar_chart(df, x="Date", y="Number of Students", color="Number of Students")
+            with st.container(border=True):
+                st.bar_chart(df, x="Date", y="Number of Students", color="Number of Students")
+            with st.container(border=True):
+                st.text("Class Attendance Rate")
+                st.subheader(f"{(total_attendance/max_attendance)*100}%")
 
-        st.subheader("Class Academic report")
+        except:
+            st.write("No attendance data yet.")
+
+        st.subheader("Class Academic Report")
 
 
 

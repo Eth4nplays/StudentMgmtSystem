@@ -254,7 +254,7 @@ def joinClass(id_token, classCode, studentUID):
                 # add studentUID to the class's students list
                 if "students" not in classData:
                     classData["students"] = []
-                classData["students"].append(studentUID)
+                classData["students"].append(f"{studentUID} {getData(studentUID, id_token)["name"]}")
                 # update the class data
                 update_url = (
                     f"{st.secrets['firebase']['database_url']}"
@@ -321,8 +321,8 @@ def leaveClass(id_token, className, uid):
     if response.ok:
         classData = response.json()
         # Remove student from the students array
-        if "students" in classData and uid in classData["students"]:
-            classData["students"].remove(uid)
+        if "students" in classData and f"{uid} {getData(uid, id_token)["name"]}" in classData["students"]:
+            classData["students"].remove(f"{uid} {getData(uid, id_token)["name"]}")
             # Update the class data
             update_response = requests.put(url, json=classData)
             if update_response.ok:
