@@ -293,7 +293,7 @@ def classViewer():
         individual_attendance = {}
         max_attendance = 0
         total_attendance = 0
-        tempdays = 0
+        totaldaysofattendance = len(class_data["attendance"])
 
         try:
             for i in (class_data["students"]):
@@ -308,7 +308,6 @@ def classViewer():
                         total_attendance += 1
                     max_attendance += 1
                 attendance_report_dict[i] = count
-            st.write(class_data["attendance"])
             st.write(individual_attendance)
 
             df = pd.DataFrame(list(attendance_report_dict.items()), columns=["Date", "Number of Students"])
@@ -318,6 +317,9 @@ def classViewer():
             with st.container(border=True):
                 st.text("Class Attendance Rate")
                 st.subheader(f"{(total_attendance/max_attendance)*100}%")
+            with st.container(border=True):
+                st.text("Individual Student Attendance")
+                st.dataframe(pd.DataFrame(list(individual_attendance.items()), columns=["Student", "Number of Classes Attended"]))
 
         except:
             st.write("No attendance data yet.")
