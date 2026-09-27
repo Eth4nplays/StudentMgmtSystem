@@ -6,6 +6,8 @@ import streamlit as st
 import helpers.firebase as firebase
 import helpers.cookies as cookies
 from helpers.imagebuttons import *
+import calendar
+from datetime import datetime
 
 if 'class_view' not in st.session_state:
     st.session_state['class_view'] = False
@@ -95,6 +97,36 @@ def classViewer():
                         )
         else:
             st.error("Failed to retrieve class schedule.")
+
+    with reports:
+        st.subheader("My Attendance")
+
+    name = st.session_state['profile']['name']
+
+    # Month selector
+    month = st.selectbox(
+        "Select Month",
+        range(1, 13),
+        format_func=lambda m: calendar.month_name[m]
+    )
+
+    year = datetime.now().year  # or fix to a specific year
+
+    # Build row for the chosen month
+    row = {}
+    num_days = calendar.monthrange(year, month)[1]
+
+    for day in range(1, num_days + 1):
+        date_str = f"{day:02d}-{month:02d}-{year}"
+        records = class_data["attendance"].get(date_str, {})
+        row[date_str] = "TICK" if records.get(name, False) else ""
+
+    # Convert to DataFrame
+    df = pd.DataFrame([row])
+
+    # Display table filling width
+    st.dataframe(df, use_container_width=True, hide_index=True)
+                    
 
     if people.open:
         with people:
