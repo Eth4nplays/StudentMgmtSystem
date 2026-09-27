@@ -32,22 +32,27 @@ cd StudentMgmtSystem
 3) Get API key by creating a web app within the console<img width="656" height="167" alt="image" src="https://github.com/user-attachments/assets/4d3aa41c-ef94-4736-b274-df571c6d9633" />
 <img width="466" height="399" alt="image" src="https://github.com/user-attachments/assets/e0d6c39d-4d52-4023-9b22-48e88e651548" />
 
-5) Paste these two into `.streamlit/secrets.toml` as:
-```toml
-[firebase]
-api_key = "apiKeyHere67676767676767"
-database_url = "https://your-project-default-rtdb.firebaseio.com"
-```
-5) Generate private key of Python Firebase Admin SDK service account from the "Service Accounts" tab of project settings
+4) Generate private key of Python Firebase Admin SDK service account from the "Service Accounts" tab of project settings
    <img width="1021" height="728" alt="image" src="https://github.com/user-attachments/assets/e0293732-f92c-4a2d-a43c-c020345558fd" />
 
-7) Paste contents into the `.streamlit/secrets.toml` as:
+5) Paste contents into the `.streamlit/secrets.toml` in this format:
 ```toml
+[firebase]
+api_key = "API_KEY_HERE"
+database_url = "DATABASE_URL_HERE"
+
 [firebase_admin]
 "type"= "service_account"
-"project_id"= "amazingBestProject"
-"private_key_id"= "676767abcd67privatekeyhere6767"
-...continued
+"project_id"= "PROJECT_ID_HERE"
+"private_key_id"= "PRIVATE_KEY_ID_HERE"
+"private_key"= "PRIVATE_KEY_HERE"
+"client_email"= "CLIENT_EMAIL_HERE"
+"client_id"= "CLIENT_ID_HERE"
+"auth_uri"= "AUTH_URI_HERE"
+"token_uri"= "TOKEN_URI_HERE"
+"auth_provider_x509_cert_url"= "AUTH_PROV_CERT_URL_HERE"
+"client_x509_cert_url"= "CLIENT_CERT_URL_HERE"
+"universe_domain"= "UNIV_DOMAIN_HERE"
 ```
 
 ## Hosting the application
