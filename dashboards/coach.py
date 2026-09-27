@@ -290,10 +290,16 @@ def classViewer():
         #show graph taking data from attendance
 
         attendance_report_dict = {}
+        individual_attendance = {}
         max_attendance = 0
         total_attendance = 0
+        tempdays = 0
 
         try:
+            for i in (class_data["students"]):
+                for j in (class_data["attendance"]):
+                    if i.split()[1] in class_data["attendance"][j]:
+                        individual_attendance[i.split()[1]] = individual_attendance.get(i.split()[1], 0) + (1 if class_data["attendance"][j][i.split()[1]] == True else 0)
             for i in (class_data["attendance"]):
                 count = 0
                 for j in class_data["attendance"][i]:
@@ -302,7 +308,8 @@ def classViewer():
                         total_attendance += 1
                     max_attendance += 1
                 attendance_report_dict[i] = count
-        
+            st.write(class_data["attendance"])
+            st.write(individual_attendance)
 
             df = pd.DataFrame(list(attendance_report_dict.items()), columns=["Date", "Number of Students"])
 
