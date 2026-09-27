@@ -103,14 +103,19 @@ def classViewer():
 
         name = st.session_state['profile']['name']
 
-        # Month selector
-        month = st.selectbox(
-            "Select Month",
-            range(1, 13),
-            format_func=lambda m: calendar.month_name[m]
-        )
+        with st.container(horizontal=True):
+            month = st.selectbox(
+                "Month",
+                range(1, 13),
+                format_func=lambda m: calendar.month_name[m],
+                index= datetime.now().month-1
+            )
 
-        year = datetime.now().year  # or fix to a specific year
+            year = st.selectbox(
+                "Year",
+                range(2025, datetime.now().year+1),
+                index= datetime.now().year-2025
+            )
 
         with st.container(border=True):
             # Build row for the chosen month
@@ -118,17 +123,25 @@ def classViewer():
             num_days = calendar.monthrange(year, month)[1]
 
             total_attendance = 0
+            total_days = 0
 
             for day in range(1, num_days + 1):
                 date_str = f"{day:02d}-{month:02d}-{year}"
                 records = class_data["attendance"].get(date_str, {})
 
+                if name not in records:
+                    continue
+                else:
+                    total_days += 1
+
+                attended = records.get(name, False)
+
                 rows.append({
                     "Date": date_str,
-                    "Attendance": True if records.get(name, False) else False
+                    "Attendance": attended
                 })
 
-                if records.get(name, False):
+                if attended:
                     total_attendance += 1
 
             # Convert to DataFrame
@@ -140,10 +153,13 @@ def classViewer():
         with st.container(horizontal=True):
             with st.container(border=True):
                 st.text("Class Attendance Rate")
-                st.subheader(f"{round((total_attendance/num_days)*100, 1)}%")
+                try:
+                    st.subheader(f"{round((total_attendance/total_days)*100, 1)}%")
+                except:
+                    st.subheader(f"0%")
             with st.container(border=True):
                 st.text("Total Attendance")
-                st.subheader(f"{total_attendance}/{num_days}")
+                st.subheader(f"{total_attendance}/{total_days}")
                     
 
     if people.open:
