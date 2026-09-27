@@ -2,6 +2,11 @@ import requests
 import streamlit as st
 from firebase_admin import credentials, auth, db
 
+# majority of these functions are based on the firebase rest api through requests
+# - get docs from here: https://firebase.google.com/docs/reference/rest/
+# only use the firebase admin sdk if needed (example deleting an account)
+# - get docs from here: https://firebase.google.com/docs/reference/admin/python
+
 API_KEY = st.secrets["firebase"]["api_key"]
 
 def login(email, password):
