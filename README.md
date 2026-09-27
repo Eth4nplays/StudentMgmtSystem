@@ -3,18 +3,20 @@
 # Student Management System
 A web application for managing after-school activities with different user roles using Firebase and Python with Streamlit
 
+# Features:
+- Account management
+- Classes
+   - Task management
+   - Reports
+   - Attendance
+   - Schedule
+- Announcements & Inbox
+
 # Setting up
 ## Requirements
 You must have installed:
 - Python 3
 - Git
-
-Dependencies for Python:
-- extra-streamlit-components
-- streamlit
-- firebase-admin
-
-This can be automatically imported by running `pip install -r requirements.txt`
 
 ## Cloning the repo
 1) Clone the repo
@@ -25,22 +27,42 @@ git clone https://github.com/Eth4nplays/StudentMgmtSystem.git
 ```bash
 cd StudentMgmtSystem
 ```
+
+## Installing dependencies
+1) Run the following:
+```bash
+python -m pip install -r requirements.txt
+```
+
 ## Creating Fireabse project
 1) Create a Firebase project on https://console.firebase.google.com/
-2) Set up Authentication and Realtime Database<img width="800" height="363" alt="image" src="https://github.com/user-attachments/assets/2ab175b1-b1f5-41c6-95e8-653784a76fa2" /> 
+2) Set up Authentication
+   - Select from the sidebar: Security > Authentication
+   - Enable authentication in the project
+   - Add the "Email/Password" provider for authentication
+3) Set up Realtime Database
+   - Select from the sidebar: Databases & Storage > Realtime Database
+   - Enable realtime database with the **United States (us-central1)** server selected
+   - Select the **test mode** security rule
+4) Get API key by creating a web app within the console
+   - Select from the sidebar: Settings > General
+   - Scroll down to the "Your Apps" section
+   - Click on "Add App" > "Web App"
+   - Copy the apiKey and databaseURL somewhere, you'll need it later.
 
-3) Get API key by creating a web app within the console<img width="656" height="167" alt="image" src="https://github.com/user-attachments/assets/4d3aa41c-ef94-4736-b274-df571c6d9633" />
-<img width="466" height="399" alt="image" src="https://github.com/user-attachments/assets/e0d6c39d-4d52-4023-9b22-48e88e651548" />
+5) Generate private key of Python Firebase Admin SDK service account
+   - Select from the sidebar: Settings > Service Accounts
+   - Select the "Firebase Admin SDK" tab and select "Generate new private key"
+   - Download the JSON. You'll need it later.
 
-4) Generate private key of Python Firebase Admin SDK service account from the "Service Accounts" tab of project settings
-   <img width="1021" height="728" alt="image" src="https://github.com/user-attachments/assets/e0293732-f92c-4a2d-a43c-c020345558fd" />
-
-5) Paste contents into the `.streamlit/secrets.toml` in this format:
+6) Paste contents into the `.streamlit/secrets.toml` in this format:
 ```toml
+# Paste the apiKey and databaseURL you copied into the fields below.
 [firebase]
 api_key = "API_KEY_HERE"
 database_url = "DATABASE_URL_HERE"
 
+# Paste each of the contents from the JSON you downloaded into the fields below.
 [firebase_admin]
 "type"= "service_account"
 "project_id"= "PROJECT_ID_HERE"
@@ -61,3 +83,4 @@ Run the following:
 ```bash
 python -m streamlit run
 ```
+2) Streamlit will provide a URL. Open it in your browser to start using the app.
