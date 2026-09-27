@@ -99,7 +99,7 @@ def classViewer():
             st.error("Failed to retrieve class schedule.")
 
     with reports:
-        st.subheader("My Attendance")
+        st.subheader("Attendance Report")
 
         name = st.session_state['profile']['name']
 
@@ -112,20 +112,38 @@ def classViewer():
 
         year = datetime.now().year  # or fix to a specific year
 
-        # Build row for the chosen month
-        row = {}
-        num_days = calendar.monthrange(year, month)[1]
+        with st.container(border=True):
+            # Build row for the chosen month
+            rows = []
+            num_days = calendar.monthrange(year, month)[1]
 
-        for day in range(1, num_days + 1):
-            date_str = f"{day:02d}-{month:02d}-{year}"
-            records = class_data["attendance"].get(date_str, {})
-            row[date_str] = "TICK" if records.get(name, False) else ""
+            total_attendance = 0
 
-        # Convert to DataFrame
-        df = pd.DataFrame([row])
+            for day in range(1, num_days + 1):
+                date_str = f"{day:02d}-{month:02d}-{year}"
+                records = class_data["attendance"].get(date_str, {})
 
-        # Display table filling width
-        st.dataframe(df, use_container_width=True, hide_index=True)
+                rows.append({
+                    "Date": date_str,
+                    "Attendance": True if records.get(name, False) else False
+                })
+
+                if records.get(name, False):
+                    total_attendance += 1
+
+            # Convert to DataFrame
+            df = pd.DataFrame(rows)
+
+            # Display table
+            st.dataframe(df, use_container_width=True, hide_index=True)
+
+        with st.container(horizontal=True):
+            with st.container(border=True):
+                st.text("Class Attendance Rate")
+                st.subheader(f"{round((total_attendance/num_days)*100, 1)}%")
+            with st.container(border=True):
+                st.text("Total Attendance")
+                st.subheader(f"{total_attendance}/{num_days}")
                     
 
     if people.open:
