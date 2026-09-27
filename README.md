@@ -34,7 +34,9 @@ cd StudentMgmtSystem
 python -m pip install -r requirements.txt
 ```
 
-## Creating Fireabse project
+## Creating Firebase project
+> [!NOTE]
+> If you have been provided the secrets.toml file (located in .streamlit/config.toml), you may ignore this.
 1) Create a Firebase project on https://console.firebase.google.com/
 2) Set up Authentication
    - Select from the sidebar: Security > Authentication
@@ -43,7 +45,7 @@ python -m pip install -r requirements.txt
 3) Set up Realtime Database
    - Select from the sidebar: Databases & Storage > Realtime Database
    - Enable realtime database with the **United States (us-central1)** server selected
-   - Select the **test mode** security rule
+   - Select the **test mode** security rule *(we selected test mode for demonstration and debugging purposes only. for deployment, proper rules should be configured)*
 4) Get API key by creating a web app within the console
    - Select from the sidebar: Settings > General
    - Scroll down to the "Your Apps" section
