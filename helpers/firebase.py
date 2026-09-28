@@ -1,3 +1,5 @@
+import datetime
+
 import requests
 import streamlit as st
 from firebase_admin import credentials, auth, db
@@ -240,6 +242,86 @@ def editAttendance(id_token, className, field, value):
 
     response.raise_for_status()
 
+def createTask(id_token, className, taskName, contents, students, totalGrade, acceptingSubmissions):
+    '''
+    totalGrade can be either an integer or None. if it's none, it is an ungraded task.
+    '''
+    date=datetime.datetime.now().strftime("%y %m %d %H %M")
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/classes/{className}/tasks/{date}.json"
+        f"?auth={id_token}"
+    )
+
+    payload = {"title":taskName, "contents":contents, "students":students, "totalGrade":totalGrade, "submittable":acceptingSubmissions}
+
+    response = requests.put(url, json=payload)
+
+    if response.ok:
+        return response.json()
+
+    response.raise_for_status()
+
+def editTask(id_token, className, date, field, value):
+    '''
+    this is for editing individual fields of the tasks, good for changing
+    the task name, roles, or content
+    date is using format %y %m %d %H %M and is the key of the task.
+    '''
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/classes/{className}/tasks/{date}/{field}.json"
+        f"?auth={id_token}"
+    )
+
+    response = requests.put(url, json=value)
+
+    if response.ok:
+        return response.json()
+
+    response.raise_for_status()
+
+def submitTask(id_token, name, className, date, submissionContent):
+    '''
+    name is the username of the student who submitted it.
+    submissionContent is what they submit.
+    '''
+    date=datetime.datetime.now().strftime("%y %m %d %H %M")
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/classes/{className}/tasks/{date}/submissions/{name}.json"
+        f"?auth={id_token}"
+    )
+    
+    payload = {"submission":submissionContent}
+
+    response = requests.put(url, json=payload)
+
+    if response.ok:
+        return response.json()
+
+    response.raise_for_status()
+
+def gradeTask(id_token, studentName, className, date, grade):
+    '''
+    for teachers to grade the task.
+    '''
+    date=datetime.datetime.now().strftime("%y %m %d %H %M")
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/classes/{className}/tasks/{date}/submissions/{studentName}.json"
+        f"?auth={id_token}"
+    )
+
+    payload = {"grade":grade}
+
+    response = requests.put(url, json=payload)
+
+    if response.ok:
+        return response.json()
+
+    response.raise_for_status()
+
 def joinClass(id_token, classCode, studentUID):
     url = (
         f"{st.secrets['firebase']['database_url']}"
@@ -266,7 +348,6 @@ def joinClass(id_token, classCode, studentUID):
                     return True
 
     return False
-
 
 def getClass(id_token, className):
     url = (
