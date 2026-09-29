@@ -215,10 +215,10 @@ def classViewer():
                         columns=["Student", "Attendance"]), hide_index=True, width="stretch", key=f"attendance_editor_{date.strftime("%d-%m-%Y")}")
                     if st.form_submit_button("Submit"):
                         payload = edited_df.set_index("Student").to_dict()["Attendance"]
-                        print(firebase.editAttendance(id_token=userToken, 
+                        firebase.editAttendance(id_token=userToken, 
                                                 className=st.session_state['selected_class'], 
                                                 field=date.strftime("%d-%m-%Y"), 
-                                                value=payload))
+                                                value=payload)
                         st.success("Attendance updated successfully!")
             except:
                 try:

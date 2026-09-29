@@ -45,7 +45,6 @@ def viewClass(className):
 def classCard(i):
     class_name, class_data = i
     # Check if student is in the class
-    print(class_data.get('students', {}))
     if any(student.split()[0] == uid for student in class_data.get('students', [])):
         with st.container(border=True):
             with st.container(horizontal=True, vertical_alignment="center"):
@@ -148,7 +147,7 @@ def classViewer():
             df = pd.DataFrame(rows)
 
             # Display table
-            st.dataframe(df, use_container_width=True, hide_index=True)
+            st.dataframe(df, width="stretch", hide_index=True)
 
         with st.container(horizontal=True):
             with st.container(border=True):
