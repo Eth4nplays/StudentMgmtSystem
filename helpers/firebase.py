@@ -242,6 +242,20 @@ def editAttendance(id_token, className, field, value):
 
     response.raise_for_status()
 
+def getTask(id_token, className):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/classes/{className}/tasks.json"
+        f"?auth={id_token}"
+    )
+
+    response = requests.get(url)
+
+    if response.ok:
+        return response.json()
+
+    return None
+
 def createTask(id_token, className, taskName, contents, totalGrade, deadline ):
     '''
     totalGrade can be either an integer or None. if it's none, it is an ungraded task.
@@ -294,13 +308,17 @@ def submitTask(id_token, name, className, date, submissionContent):
     )
     
     payload = {"submission":submissionContent}
+    
+    deadline = requests.get(f"{st.secrets['firebase']['database_url']}"
+            f"/classes/{className}/tasks/{date}.json"
+            f"?auth={id_token}")["deadline"]
 
-    response = requests.put(url, json=payload)
-
-    if response.ok:
-        return response.json()
-
-    response.raise_for_status()
+    if date < deadline:
+        response = requests.put(url, json=payload)
+        if response.ok:
+            return response.json()
+        response.raise_for_status()
+    return False
 
 def gradeTask(id_token, studentName, className, date, grade):
     '''
