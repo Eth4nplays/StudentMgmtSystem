@@ -207,6 +207,15 @@ def addActivity(class_data):
         firebase.createTask(id_token , className, activity_name, content, max_total_grade, (deadline_date.strftime("%y %m %d") + " " + deadline_time.strftime("%H %M")))
         st.rerun()
 
+@st.dialog("View and Edit Activity")
+def viewActivitydialog(class_data):
+    st.subheader("Activity name: " + class_data["title"])
+    st.write("Activity description: " + class_data["contents"])
+    st.write(f"Max Total Grade: {class_data['totalGrade']}")
+    st.write(f"Deadline: {class_data['deadline']}")
+    if st.button("Edit Activity"):
+        st.write("Editing")
+
 def classViewer():
 
     if st.button("Back", type="tertiary", icon=":material/arrow_back:"):
@@ -224,6 +233,15 @@ def classViewer():
             with st.bottom:
                 st.button("Add Activity", type="secondary", icon=":material/add:", on_click=addActivity, args=(class_data,))
             st.write("Class Activities")
+            for i in class_data["tasks"]:
+                with st.container(horizontal=True, vertical_alignment="center", border=True):
+                    st.write(class_data["tasks"][i]["title"])
+                    action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Activity"], key=f"menu{class_data['tasks'][i]['title']}")
+                    view_and_edit_activity = st.button("View Activity", key=f"view_{class_data['tasks'][i]['title']}", on_click=viewActivitydialog, args=(class_data['tasks'][i],))
+                    if action == "Delete Activity":
+                        firebase.deleteTask(userToken, st.session_state['selected_class'], class_data["tasks"][i]["title"])
+                        st.rerun()
+                    
 
 
 
