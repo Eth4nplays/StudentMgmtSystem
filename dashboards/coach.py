@@ -191,7 +191,21 @@ def editSchedule(class_data):
         else:
             st.error("Failed to update schedule.")
 
+@st.dialog("Create Activity")
+def addActivity(class_data):
+    id_token = userToken
+    className = st.session_state['selected_class']
+    activity_name = st.text_input("Activity Name")
+    content = st.text_area("Activity Description")
+    max_total_grade = st.number_input("Max Total Grade", min_value=0, step=1, value=100)
+    with st.container(horizontal=True):
+        deadline_date = st.date_input("Deadline", format="DD/MM/YYYY")
+        deadline_time = st.time_input('')
 
+    
+    if st.button("Add"):
+        firebase.createTask(id_token , className, activity_name, content, max_total_grade, (deadline_date.strftime("%y %m %d") + " " + deadline_time.strftime("%H %M")))
+        st.rerun()
 
 def classViewer():
 
@@ -203,6 +217,15 @@ def classViewer():
 
     activities, attendance, reports, schedule, people = st.tabs(["Activities", "Attendance", "Reports", "Schedule", "People"], on_change="rerun")
     class_data = firebase.getClass(userToken, st.session_state['selected_class'])
+
+    
+    with activities:
+        if activities.open :
+            with st.bottom:
+                st.button("Add Activity", type="secondary", icon=":material/add:", on_click=addActivity, args=(class_data,))
+            st.write("Class Activities")
+
+
 
     with attendance:
         date = st.date_input("Select Date", value=None, min_value=None, max_value=None, key="attendance_date", format="DD-MM-YYYY")
