@@ -242,7 +242,7 @@ def editAttendance(id_token, className, field, value):
 
     response.raise_for_status()
 
-def createTask(id_token, className, taskName, contents, students, totalGrade, acceptingSubmissions):
+def createTask(id_token, className, taskName, contents, totalGrade, deadline ):
     '''
     totalGrade can be either an integer or None. if it's none, it is an ungraded task.
     '''
@@ -253,7 +253,7 @@ def createTask(id_token, className, taskName, contents, students, totalGrade, ac
         f"?auth={id_token}"
     )
 
-    payload = {"title":taskName, "contents":contents, "students":students, "totalGrade":totalGrade, "submittable":acceptingSubmissions}
+    payload = {"title":taskName, "contents":contents, "totalGrade":totalGrade, "deadline":deadline}
 
     response = requests.put(url, json=payload)
 
