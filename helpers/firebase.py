@@ -276,19 +276,28 @@ def createTask(id_token, className, taskName, contents, totalGrade, deadline ):
 
     response.raise_for_status()
 
-def editTask(id_token, className, date, field, value):
-    '''
-    this is for editing individual fields of the tasks, good for changing
-    the task name, roles, or content
-    date is using format %y %m %d %H %M and is the key of the task.
-    '''
+def deleteTask(id_token, className, date):
     url = (
         f"{st.secrets['firebase']['database_url']}"
-        f"/classes/{className}/tasks/{date}/{field}.json"
+        f"/classes/{className}/tasks/{date}.json"
         f"?auth={id_token}"
     )
 
-    response = requests.put(url, json=value)
+    response = requests.delete(url)
+    if response.ok:
+        return True
+
+    return False
+
+def editTask(id_token, className, date, taskName, contents, totalGrade, deadline):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/classes/{className}/tasks/{date}.json"
+        f"?auth={id_token}"
+    )
+    payload = {"title":taskName, "contents":contents, "totalGrade":totalGrade, "deadline":deadline}
+
+    response = requests.put(url, json=payload)
 
     if response.ok:
         return response.json()
@@ -300,7 +309,6 @@ def submitTask(id_token, name, className, date, submissionContent):
     name is the username of the student who submitted it.
     submissionContent is what they submit.
     '''
-    date=datetime.datetime.now().strftime("%y %m %d %H %M")
     url = (
         f"{st.secrets['firebase']['database_url']}"
         f"/classes/{className}/tasks/{date}/submissions/{name}.json"
@@ -313,7 +321,7 @@ def submitTask(id_token, name, className, date, submissionContent):
             f"/classes/{className}/tasks/{date}.json"
             f"?auth={id_token}")["deadline"]
 
-    if date < deadline:
+    if datetime.datetime.now() <= datetime.strptime(deadline, "%y %m %d %H %M"):
         response = requests.put(url, json=payload)
         if response.ok:
             return response.json()

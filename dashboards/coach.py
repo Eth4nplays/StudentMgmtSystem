@@ -1,3 +1,4 @@
+import datetime
 from io import StringIO
 import string
 
@@ -11,6 +12,12 @@ from datetime import time
 
 if 'class_view' not in st.session_state:
     st.session_state['class_view'] = False
+
+if 'activity_view' not in st.session_state:
+    st.session_state['activity_view'] = False
+
+if 'editing_activity' not in st.session_state:
+    st.session_state['editing_activity'] = False
 
 if cookies.getCookies("token") != None:
         userToken = cookies.getCookies("token")
@@ -111,6 +118,11 @@ def viewClass(className):
     st.session_state.update({"class_view": True})
     st.rerun()
 
+def viewActivity(date):
+    st.session_state.update({"activity_view": True})
+    st.session_state.update({"activityDate": date})
+    st.rerun()
+
 def classCard(i):
     # check if the coach actually owns the class
     if uid in i[1].get('classOwner'):
@@ -207,14 +219,61 @@ def addActivity(class_data):
         firebase.createTask(id_token , className, activity_name, content, max_total_grade, (deadline_date.strftime("%y %m %d") + " " + deadline_time.strftime("%H %M")))
         st.rerun()
 
-@st.dialog("View and Edit Activity")
-def viewActivitydialog(class_data):
-    st.subheader("Activity name: " + class_data["title"])
-    st.write("Activity description: " + class_data["contents"])
-    st.write(f"Max Total Grade: {class_data['totalGrade']}")
-    st.write(f"Deadline: {class_data['deadline']}")
-    if st.button("Edit Activity"):
-        st.write("Editing")
+@st.dialog("View Submission")
+def viewSubmission(class_data, student_name):
+    st.subheader(f"Submission for {student_name}")
+
+def activityViewer(date):
+    class_data = firebase.getClass(userToken, st.session_state['selected_class'])["tasks"][date]
+    if not st.session_state['editing_activity']:
+        if st.button("Back", type="tertiary", icon=":material/arrow_back:"):
+            st.session_state.update({"activity_view": False})
+            st.rerun()
+        with st.container(horizontal=True):
+                        st.header(class_data["title"])
+                        if st.button("Edit Activity", type="tertiary", icon=":material/edit:"):
+                            st.session_state['editing_activity'] = True
+                            st.rerun()
+        st.write(f"Due on **{datetime.datetime.strptime(class_data['deadline'], '%y %m %d %H %M').strftime('%d %B %Y, %I:%M %p')}** • Maximum Grade: **{class_data['totalGrade']}**")
+        with st.container(border=True):
+            st.markdown(class_data["contents"])
+        st.divider()
+        st.subheader("Submissions")
+        try:
+            for i in class_data["submissions"]:
+                with st.container(horizontal=True, vertical_alignment="center", border=True):
+                    st.write(i)
+                    st.write(f"Grade: {class_data['submissions'][i]['grade']}/{class_data['totalGrade']}")
+                    if st.button("View Submission", key=f"view_{i}"):
+                        viewSubmission(class_data, i)
+        except:
+            st.write("No submissions yet.")
+        
+    else:
+        
+        with st.container(horizontal=True):
+            title= st.text_input("Activity Title", value=class_data["title"], key="edit_title")
+        with st.container(horizontal=True):
+            deadline_date = st.date_input("Deadline", format="DD/MM/YYYY", value=datetime.datetime.strptime(class_data['deadline'], '%y %m %d %H %M').date(), key="edit_deadline_date")
+            deadline_time = st.time_input("Time", value=datetime.datetime.strptime(class_data['deadline'], '%y %m %d %H %M').time(), key="edit_deadline_time")
+        max_total_grade = st.number_input("Max Total Grade", min_value=0, step=1, value=class_data["totalGrade"])
+        content = st.text_area("Activity Contents", value=class_data["contents"], key="edit_contents")
+
+        if st.button("Save and Exit", type="primary", icon=":material/arrow_back:"):
+            st.session_state.update({"editing_activity": False})
+            firebase.editTask(userToken , className=st.session_state['selected_class'], date=date, taskName=title, contents=content, totalGrade=max_total_grade, deadline=(deadline_date.strftime("%y %m %d") + " " + deadline_time.strftime("%H %M")))
+
+            st.rerun()
+
+@st.dialog("Delete Activity?")
+def deleteActivity(class_data, i):
+    st.write(f"Are you sure you want to delete {class_data['tasks'][i]['title']}?")
+    with st.container(horizontal=True, vertical_alignment="center"):
+        if st.button("Yes"):
+            firebase.deleteTask(userToken, st.session_state['selected_class'], i)
+            st.rerun()
+        if st.button("No", type="primary"):
+            st.rerun()
 
 def classViewer():
 
@@ -231,16 +290,20 @@ def classViewer():
     with activities:
         if activities.open :
             with st.bottom:
-                st.button("Add Activity", type="secondary", icon=":material/add:", on_click=addActivity, args=(class_data,))
-            st.write("Class Activities")
-            for i in class_data["tasks"]:
-                with st.container(horizontal=True, vertical_alignment="center", border=True):
-                    st.write(class_data["tasks"][i]["title"])
-                    action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Activity"], key=f"menu{class_data['tasks'][i]['title']}")
-                    view_and_edit_activity = st.button("View Activity", key=f"view_{class_data['tasks'][i]['title']}", on_click=viewActivitydialog, args=(class_data['tasks'][i],))
-                    if action == "Delete Activity":
-                        firebase.deleteTask(userToken, st.session_state['selected_class'], class_data["tasks"][i]["title"])
-                        st.rerun()
+                st.button("Add Activity", type="primary", icon=":material/add:", on_click=addActivity, args=(class_data,))
+            try:
+                for i in class_data["tasks"]:
+                    with st.container(horizontal=True, vertical_alignment="center", border=True):
+                        with st.container():
+                            st.write(class_data["tasks"][i]["title"])
+                            if st.button("View Activity", key=f"view_{class_data['tasks'][i]}"):
+                                viewActivity(i)
+                        action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Activity"], key=f"menu{class_data['tasks'][i]}")
+                        if action == "Delete Activity":
+                            deleteActivity(class_data, i)
+            except Exception as e:
+                st.write(e)
+                st.write("No activities found. Create your first one below!")
                     
 
 
@@ -388,4 +451,7 @@ if not st.session_state['class_view']:
         createClass()
 
 else:
-    classViewer()
+    if st.session_state['activity_view']:
+        activityViewer(st.session_state['activityDate'])
+    else:
+        classViewer()
