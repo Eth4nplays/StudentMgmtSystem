@@ -57,6 +57,15 @@ def classCard(i):
                     firebase.leaveClass(userToken, class_name, uid)
                     st.rerun()
             
+@st.dialog("View Activity")
+def viewActivitydialog(class_data):
+    st.subheader("Activity name: " + class_data["title"])
+    st.write("Activity description: " + class_data["contents"])
+    st.write(f"Max Total Grade: {class_data['totalGrade']}")
+    st.write(f"Deadline: {class_data['deadline']}")
+    if st.button("Submit Activity"):
+        st.write("Submitting Activity...")
+
 
 def classViewer():
     if st.button("Back", type="tertiary", icon=":material/arrow_back:"):
@@ -68,7 +77,16 @@ def classViewer():
     activities, reports, schedule, people = st.tabs(["Activities", "Reports", "Schedule", "People"], on_change="rerun")
 
     class_data = firebase.getClass(userToken, st.session_state['selected_class'])
-    
+
+    with activities:
+        st.subheader("Activities")
+        if class_data:
+            for i in class_data["tasks"]:
+                with st.container(horizontal=True, vertical_alignment="center", border=True):
+                    st.write(class_data["tasks"][i]["title"])
+                    view_activity = st.button("View Activity", key=f"view_{class_data['tasks'][i]['title']}", on_click=viewActivitydialog, args=(class_data['tasks'][i],))
+
+
     with schedule:
         if class_data:
             df = pd.read_csv(
