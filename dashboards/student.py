@@ -12,6 +12,12 @@ from datetime import datetime
 if 'class_view' not in st.session_state:
     st.session_state['class_view'] = False
 
+if 'activity_view' not in st.session_state:
+    st.session_state['activity_view'] = False
+
+if 'editing_activity' not in st.session_state:
+    st.session_state['editing_activity'] = False
+
 if cookies.getCookies("token") is not None:
     userToken = cookies.getCookies("token")
 else:
@@ -56,15 +62,33 @@ def classCard(i):
                 if action == "Leave Class":
                     firebase.leaveClass(userToken, class_name, uid)
                     st.rerun()
-            
-@st.dialog("View Activity")
-def viewActivitydialog(class_data):
-    st.subheader("Activity name: " + class_data["title"])
-    st.write("Activity description: " + class_data["contents"])
-    st.write(f"Max Total Grade: {class_data['totalGrade']}")
-    st.write(f"Deadline: {class_data['deadline']}")
-    if st.button("Submit Activity"):
-        st.write("Submitting Activity...")
+
+def viewActivity(date):
+    st.session_state.update({"activity_view": True})
+    st.session_state.update({"activityDate": date})
+    st.rerun()
+
+def activityViewer(date):
+    class_data = firebase.getClass(userToken, st.session_state['selected_class'])["tasks"][date]
+    if not st.session_state['editing_activity']:
+        if st.button("Back", type="tertiary", icon=":material/arrow_back:"):
+            st.session_state.update({"activity_view": False})
+            st.rerun()
+        with st.container(horizontal=True):
+                        st.header(class_data["title"])
+        st.write(f"Due on **{datetime.strptime(class_data['deadline'], '%y %m %d %H %M').strftime('%d %B %Y, %I:%M %p')}** • Maximum Grade: **{class_data['totalGrade']}**")
+        with st.container(border=True):
+            st.markdown(class_data["contents"])
+        st.divider()
+    else:
+        
+        with st.container(horizontal=True):
+            title= st.text_input("Activity Title", value=class_data["title"], key="edit_title")
+        with st.container(horizontal=True):
+            deadline_date = st.date_input("Deadline", format="DD/MM/YYYY", value=datetime.strptime(class_data['deadline'], '%y %m %d %H %M').date(), key="edit_deadline_date")
+            deadline_time = st.time_input("Time", value=datetime.strptime(class_data['deadline'], '%y %m %d %H %M').time(), key="edit_deadline_time")
+        max_total_grade = st.number_input("Max Total Grade", min_value=0, step=1, value=class_data["totalGrade"])
+        content = st.text_area("Activity Contents", value=class_data["contents"], key="edit_contents")
 
 
 def classViewer():
@@ -79,13 +103,19 @@ def classViewer():
     class_data = firebase.getClass(userToken, st.session_state['selected_class'])
 
     with activities:
-        st.subheader("Activities")
-        if class_data:
-            for i in class_data["tasks"]:
-                with st.container(horizontal=True, vertical_alignment="center", border=True):
-                    st.write(class_data["tasks"][i]["title"])
-                    view_activity = st.button("View Activity", key=f"view_{class_data['tasks'][i]['title']}", on_click=viewActivitydialog, args=(class_data['tasks'][i],))
+            if activities.open :
+                try:
+                    for i in class_data["tasks"]:
+                        with st.container(horizontal=True, vertical_alignment="center", border=True):
+                            with st.container():
+                                st.write(class_data["tasks"][i]["title"])
+                                if st.button("View Activity", key=f"view_{class_data['tasks'][i]}"):
+                                    viewActivity(i)
 
+                except Exception as e:
+                    st.write(e)
+                    st.write("No activities found. Create your first one below!")
+        
 
     with schedule:
         if class_data:
@@ -210,4 +240,7 @@ if not st.session_state['class_view']:
         joinClass()
 
 else:
-    classViewer()
+    if st.session_state['activity_view']:
+            activityViewer(st.session_state['activityDate'])
+    else:
+        classViewer()
