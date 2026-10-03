@@ -318,21 +318,44 @@ def submitTask(id_token, name, className, date, submissionContent):
     payload = {"submission":submissionContent}
     
     deadline = requests.get(f"{st.secrets['firebase']['database_url']}"
-            f"/classes/{className}/tasks/{date}.json"
-            f"?auth={id_token}")["deadline"]
-
-    if datetime.datetime.now() <= datetime.strptime(deadline, "%y %m %d %H %M"):
+                            f"/classes/{className}/tasks/{date}.json"
+                            f"?auth={id_token}"
+                        ).json()["deadline"] 
+    
+    if datetime.datetime.now() <= datetime.datetime.strptime(deadline, "%y %m %d %H %M"):
         response = requests.put(url, json=payload)
         if response.ok:
             return response.json()
         response.raise_for_status()
     return False
 
+def unsubmitTask(id_token, name, className, date):
+    '''
+    name is the username of the student who submitted it.
+    submissionContent is what they submit.
+    '''
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/classes/{className}/tasks/{date}/submissions/{name}.json"
+        f"?auth={id_token}"
+    )
+    deadline = requests.get(f"{st.secrets['firebase']['database_url']}"
+                            f"/classes/{className}/tasks/{date}.json"
+                            f"?auth={id_token}"
+                        ).json()["deadline"] 
+    
+    if datetime.datetime.now() <= datetime.datetime.strptime(deadline, "%y %m %d %H %M"):
+        response = requests.delete(url)
+        if response.ok:
+            return True
+        response.raise_for_status()
+    else:
+        return False
+
 def gradeTask(id_token, studentName, className, date, grade):
     '''
     for teachers to grade the task.
     '''
-    date=datetime.datetime.now().strftime("%y %m %d %H %M")
     url = (
         f"{st.secrets['firebase']['database_url']}"
         f"/classes/{className}/tasks/{date}/submissions/{studentName}.json"
@@ -341,7 +364,7 @@ def gradeTask(id_token, studentName, className, date, grade):
 
     payload = {"grade":grade}
 
-    response = requests.put(url, json=payload)
+    response = requests.patch(url, json=payload)
 
     if response.ok:
         return response.json()

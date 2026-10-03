@@ -219,9 +219,22 @@ def addActivity(class_data):
         firebase.createTask(id_token , className, activity_name, content, max_total_grade, (deadline_date.strftime("%y %m %d") + " " + deadline_time.strftime("%H %M")))
         st.rerun()
 
-@st.dialog("View Submission")
-def viewSubmission(class_data, student_name):
-    st.subheader(f"Submission for {student_name}")
+@st.dialog("Submission")
+def viewSubmission(class_data, student_name, submission, date):
+    with st.container(border=True):
+        st.markdown(submission)
+    st.divider()
+    try:
+        currentGrade = class_data["submissions"][student_name].get("grade", 0)
+    except:
+        currentGrade = 0
+    with st.container(horizontal=True, vertical_alignment="bottom"):
+        grade = st.number_input("Grade", min_value=0, max_value=class_data["totalGrade"], step=1, value=currentGrade)
+        st.write("/ " + str(class_data["totalGrade"]))
+    if st.button("Submit Grade"):
+        firebase.gradeTask(userToken, student_name, st.session_state['selected_class'], st.session_state['activityDate'], grade)
+        st.rerun()
+
 
 def activityViewer(date):
     class_data = firebase.getClass(userToken, st.session_state['selected_class'])["tasks"][date]
@@ -241,13 +254,18 @@ def activityViewer(date):
         st.subheader("Submissions")
         try:
             for i in class_data["submissions"]:
+                student_name = i.split()[1]
                 with st.container(horizontal=True, vertical_alignment="center", border=True):
-                    st.write(i)
-                    st.write(f"Grade: {class_data['submissions'][i]['grade']}/{class_data['totalGrade']}")
-                    if st.button("View Submission", key=f"view_{i}"):
-                        viewSubmission(class_data, i)
-        except:
-            st.write("No submissions yet.")
+                    st.write(student_name)
+                    with st.container(horizontal=True, horizontal_alignment="right"):
+                        try:
+                            st.write(f"{class_data['submissions'][i]['grade']}/{class_data['totalGrade']}")
+                        except:
+                            st.write(f"Ungraded")
+                    if st.button("View Submission", key=f"view_{student_name}"):
+                        viewSubmission(class_data, i, class_data['submissions'][i]['submission'], date)
+        except Exception as e:
+            st.write(f"No submissions yet. {e}")
         
     else:
         

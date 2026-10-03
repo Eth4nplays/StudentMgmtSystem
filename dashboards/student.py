@@ -68,27 +68,61 @@ def viewActivity(date):
     st.session_state.update({"activityDate": date})
     st.rerun()
 
+@st.dialog("Edit Submission")
+def editSubmission(date, submission):
+    submission = st.text_area("Submission", placeholder="Enter your submission here...", value=submission)
+    if st.button("Submit"):
+        if submission:
+            if firebase.submitTask(userToken, f"{uid} {st.session_state['profile']['name']}", st.session_state['selected_class'], date, submission):
+                st.rerun()
+            else:
+                st.warning("Apologies, but it seems that the submission deadline has passed.")
+        else:
+            st.warning("Please enter your submission before submitting.")
+
+@st.dialog("Undo Submission")
+def undoSubmission(date):
+    st.write("Are you sure you want to undo your submission? This action cannot be undone.")
+    with st.container(horizontal=True):
+        if st.button("Yes"):
+            if firebase.unsubmitTask(userToken, f"{uid} {st.session_state['profile']['name']}", st.session_state['selected_class'], date):
+                st.rerun()
+            else:
+                st.warning("Apologies, but it seems that the submission deadline has passed.")
+        if st.button("No", type="primary"):
+            st.rerun()
+
+
 def activityViewer(date):
     class_data = firebase.getClass(userToken, st.session_state['selected_class'])["tasks"][date]
-    if not st.session_state['editing_activity']:
-        if st.button("Back", type="tertiary", icon=":material/arrow_back:"):
-            st.session_state.update({"activity_view": False})
-            st.rerun()
-        with st.container(horizontal=True):
-                        st.header(class_data["title"])
-        st.write(f"Due on **{datetime.strptime(class_data['deadline'], '%y %m %d %H %M').strftime('%d %B %Y, %I:%M %p')}** • Maximum Grade: **{class_data['totalGrade']}**")
-        with st.container(border=True):
-            st.markdown(class_data["contents"])
-        st.divider()
+    if st.button("Back", type="tertiary", icon=":material/arrow_back:"):
+        st.session_state.update({"activity_view": False})
+        st.rerun()
+    with st.container(horizontal=True):
+                    st.header(class_data["title"])
+    st.write(f"Due on **{datetime.strptime(class_data['deadline'], '%y %m %d %H %M').strftime('%d %B %Y, %I:%M %p')}** • Maximum Grade: **{class_data['totalGrade']}**")
+    with st.container(border=True):
+        st.markdown(class_data["contents"])
+    st.divider()
+    submissions = class_data.get("submissions", {}).get(f"{uid} {st.session_state['profile']['name']}")
+    st.subheader("Your Submission")
+    if submissions == None:
+        submission = st.text_area("Submission", placeholder="Enter your submission here...")
+        if st.button("Submit"):
+            if submission:
+                if firebase.submitTask(userToken, f"{uid} {st.session_state['profile']['name']}", st.session_state['selected_class'], date, submission):
+                    st.success("Submission successful!")
+                    st.rerun()
+                else:
+                    st.warning("Apologies, but it seems that the submission deadline has passed.")
+            else:
+                st.warning("Please enter your submission before submitting.")
     else:
-        
-        with st.container(horizontal=True):
-            title= st.text_input("Activity Title", value=class_data["title"], key="edit_title")
-        with st.container(horizontal=True):
-            deadline_date = st.date_input("Deadline", format="DD/MM/YYYY", value=datetime.strptime(class_data['deadline'], '%y %m %d %H %M').date(), key="edit_deadline_date")
-            deadline_time = st.time_input("Time", value=datetime.strptime(class_data['deadline'], '%y %m %d %H %M').time(), key="edit_deadline_time")
-        max_total_grade = st.number_input("Max Total Grade", min_value=0, step=1, value=class_data["totalGrade"])
-        content = st.text_area("Activity Contents", value=class_data["contents"], key="edit_contents")
+        with st.container(border=True):
+            with st.container(horizontal=True, horizontal_alignment="right"):
+                st.button("Edit Submission", type="tertiary", key="edit_submission", on_click=editSubmission, args=(date,submissions["submission"]), icon=":material/edit:")
+                st.button("Undo Submission", type="tertiary", key="undo_submission", on_click=undoSubmission, args=(date,), icon=":material/undo:")
+            st.markdown(submissions["submission"])
 
 
 def classViewer():
