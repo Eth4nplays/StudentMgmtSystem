@@ -9,6 +9,7 @@ from helpers.imagebuttons import *
 import random
 import pandas as pd
 from datetime import time
+import helpers.mongodb
 
 if 'class_view' not in st.session_state:
     st.session_state['class_view'] = False
@@ -222,7 +223,21 @@ def addActivity(class_data):
 @st.dialog("Submission")
 def viewSubmission(class_data, student_name, submission, date):
     with st.container(border=True):
-        st.markdown(submission)
+        if submission.startswith("fileUpload:"):
+            st.write("This is a file submission. You can download the file below.")
+            file_id = submission.split("fileUpload:")[1]
+            file_data = helpers.mongodb.download(file_id)
+            st.download_button(
+                label="Download Submission",
+                data=file_data["data"],
+                file_name=file_data["filename"],
+                mime=file_data["contentType"],
+                key="download_submission",
+                icon=":material/download:",
+                type="primary"
+            )
+        else:
+            st.markdown(submission)
     st.divider()
     try:
         currentGrade = class_data["submissions"][student_name].get("grade", 0)
@@ -231,8 +246,9 @@ def viewSubmission(class_data, student_name, submission, date):
     with st.container(horizontal=True, vertical_alignment="bottom"):
         grade = st.number_input("Grade", min_value=0, max_value=class_data["totalGrade"], step=1, value=currentGrade)
         st.write("/ " + str(class_data["totalGrade"]))
-    if st.button("Submit Grade"):
-        firebase.gradeTask(userToken, student_name, st.session_state['selected_class'], st.session_state['activityDate'], grade)
+    comment = st.text_area("Comment", value=class_data["submissions"][student_name].get("comment", ""))
+    if st.button("Submit"):
+        firebase.gradeTask(userToken, student_name, st.session_state['selected_class'], st.session_state['activityDate'], grade, comment)
         st.rerun()
 
 

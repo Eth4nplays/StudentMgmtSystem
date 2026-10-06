@@ -8,6 +8,7 @@ import helpers.cookies as cookies
 from helpers.imagebuttons import *
 import calendar
 from datetime import datetime
+import helpers.mongodb
 
 if 'class_view' not in st.session_state:
     st.session_state['class_view'] = False
@@ -81,10 +82,12 @@ def editSubmission(date, submission):
             st.warning("Please enter your submission before submitting.")
 
 @st.dialog("Undo Submission")
-def undoSubmission(date):
+def undoSubmission(date, file, fileId=None):
     st.write("Are you sure you want to undo your submission? This action cannot be undone.")
     with st.container(horizontal=True):
         if st.button("Yes"):
+            if file:
+                helpers.mongodb.delete(fileId)
             if firebase.unsubmitTask(userToken, f"{uid} {st.session_state['profile']['name']}", st.session_state['selected_class'], date):
                 st.rerun()
             else:
@@ -107,23 +110,57 @@ def activityViewer(date):
     submissions = class_data.get("submissions", {}).get(f"{uid} {st.session_state['profile']['name']}")
     st.subheader("Your Submission")
     if submissions == None:
-        submission = st.text_area("Submission", placeholder="Enter your submission here...")
-        if st.button("Submit"):
-            if submission:
-                if firebase.submitTask(userToken, f"{uid} {st.session_state['profile']['name']}", st.session_state['selected_class'], date, submission):
-                    st.success("Submission successful!")
-                    st.rerun()
+        text, file = st.tabs(["Text Submission", "File Submission"])
+        with text:
+            submission = st.text_area("Submission", placeholder="Enter your submission here...")
+            if st.button("Submit"):
+                if submission:
+                    if firebase.submitTask(userToken, f"{uid} {st.session_state['profile']['name']}", st.session_state['selected_class'], date, submission):
+                        st.success("Submission successful!")
+                        st.rerun()
+                    else:
+                        st.warning("Apologies, but it seems that the submission deadline has passed.")
                 else:
-                    st.warning("Apologies, but it seems that the submission deadline has passed.")
-            else:
-                st.warning("Please enter your submission before submitting.")
+                    st.warning("Please enter your submission before submitting.")
+        with file:
+            uploaded_file = st.file_uploader("Upload your submission file", type=["pdf", "docx", "pptx", "xlsx", "txt", "png", "jpg", "jpeg"], accept_multiple_files=False)
+            if st.button("Submit File"):
+                if uploaded_file:
+                    file_id = helpers.mongodb.upload(uploaded_file, filename=uploaded_file.name, contentType=uploaded_file.type)
+                    if firebase.submitTask(userToken, f"{uid} {st.session_state['profile']['name']}", st.session_state['selected_class'], date, f"fileUpload:{file_id}"):
+                        st.success("File submission successful!")
+                        st.rerun()
+                    else:
+                        st.warning("Apologies, but it seems that the submission deadline has passed.")
+                else:
+                    st.warning("Please upload a file before submitting.")
     else:
         with st.container(border=True):
-            with st.container(horizontal=True, horizontal_alignment="right"):
-                st.button("Edit Submission", type="tertiary", key="edit_submission", on_click=editSubmission, args=(date,submissions["submission"]), icon=":material/edit:")
-                st.button("Undo Submission", type="tertiary", key="undo_submission", on_click=undoSubmission, args=(date,), icon=":material/undo:")
-            st.markdown(submissions["submission"])
-
+            # if the submission is a file upload
+            if submissions["submission"].startswith("fileUpload:"):
+                file_id = submissions["submission"].split("fileUpload:")[1]
+                with st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center"):
+                    st.write(f"**Grade:** {str(submissions.get("grade", "Not graded yet"))} / {str(class_data["totalGrade"])}")
+                    st.button("Undo Submission", type="tertiary", key="undo_submission", on_click=undoSubmission, args=(date,True, file_id), icon=":material/undo:")
+                file_data = helpers.mongodb.download(file_id)
+                st.download_button(
+                    label="Download your submission",
+                    data=file_data["data"],
+                    file_name=file_data["filename"],
+                    mime=file_data["contentType"],
+                    icon=":material/download:",
+                    key="download_submission",
+                    type="primary"
+                )
+            # if the submission is a text submission
+            else:
+                with st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center"):
+                    st.write(f"**Grade:** {str(submissions.get("grade", "Not graded yet"))} / {str(class_data["totalGrade"])}")
+                    st.button("Edit Submission", type="tertiary", key="edit_submission", on_click=editSubmission, args=(date,submissions["submission"]), icon=":material/edit:")
+                    st.button("Undo Submission", type="tertiary", key="undo_submission", on_click=undoSubmission, args=(date,False), icon=":material/undo:")
+                        
+                    st.markdown(submissions["submission"])
+        st.markdown(f''':material/comment: **Coach comment:** {submissions.get("comment", "No comment yet")}''')
 
 def classViewer():
     if st.button("Back", type="tertiary", icon=":material/arrow_back:"):

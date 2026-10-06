@@ -352,7 +352,7 @@ def unsubmitTask(id_token, name, className, date):
     else:
         return False
 
-def gradeTask(id_token, studentName, className, date, grade):
+def gradeTask(id_token, studentName, className, date, grade, comment):
     '''
     for teachers to grade the task.
     '''
@@ -362,7 +362,7 @@ def gradeTask(id_token, studentName, className, date, grade):
         f"?auth={id_token}"
     )
 
-    payload = {"grade":grade}
+    payload = {"grade":grade, "comment":comment}
 
     response = requests.patch(url, json=payload)
 

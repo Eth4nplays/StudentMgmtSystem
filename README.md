@@ -36,7 +36,7 @@ python -m pip install -r requirements.txt
 
 ## Creating Firebase project
 > [!NOTE]
-> If you have been provided the secrets.toml file (located in .streamlit/config.toml), you may ignore this.
+> If you have been provided the secrets.toml file (located in .streamlit/config.toml), you may ignore this and skip to the next steps.
 1) Create a Firebase project on https://console.firebase.google.com/
 2) Set up Authentication
    - Select from the sidebar: Security > Authentication
@@ -77,6 +77,23 @@ database_url = "DATABASE_URL_HERE"
 "auth_provider_x509_cert_url"= "AUTH_PROV_CERT_URL_HERE"
 "client_x509_cert_url"= "CLIENT_CERT_URL_HERE"
 "universe_domain"= "UNIV_DOMAIN_HERE"
+```
+
+## Creating MongoDB Database
+> [!NOTE]
+> Once again, if you have been provided the secrets.toml file (located in .streamlit/config.toml), you may ignore this and skip to the next steps.
+1) Create an account in MongoDB Atlas on https://cloud.mongodb.com/
+2) Create a project in MongoDB Atlas
+3) Create a cluster in your project *(you can use the free plan for now)*
+4) Copy the password for the database user to somewhere, you'll need it later
+5) Enter the cluster, select "Connect" > "Drivers and Client Libraries"
+6) Select "Python" as the language and "PyMongo (Synchronous)" as Client Library
+7) Copy the connection string, replace the `<db_password>` inside with the password you copied
+8) Paste content into the `.streamlit/secrets.toml` in this format:
+```toml
+# You can paste this below the Firebase secrets
+[mongodb]
+uri = "CONNECTION_STRING_HERE"
 ```
 
 ## Hosting the application
