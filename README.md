@@ -82,19 +82,35 @@ database_url = "DATABASE_URL_HERE"
 ## Creating MongoDB Database
 > [!NOTE]
 > Once again, if you have been provided the secrets.toml file (located in .streamlit/config.toml), you may ignore this and skip to the next steps.
-1) Create an account in MongoDB Atlas on https://cloud.mongodb.com/
-2) Create a project in MongoDB Atlas
-3) Create a cluster in your project *(you can use the free plan for now)*
-4) Copy the password for the database user to somewhere, you'll need it later
-5) Enter the cluster, select "Connect" > "Drivers and Client Libraries"
-6) Select "Python" as the language and "PyMongo (Synchronous)" as Client Library
-7) Copy the connection string, replace the `<db_password>` inside with the password you copied
-8) Paste content into the `.streamlit/secrets.toml` in this format:
-```toml
-# You can paste this below the Firebase secrets
-[mongodb]
-uri = "CONNECTION_STRING_HERE"
-```
+1) Setting up MongoDB account & project 
+   - Create an account in MongoDB Atlas on https://cloud.mongodb.com/
+   - Create a project in MongoDB Atlas
+2) Setting up a cluster
+   - Create a cluster in your project *(you can use the free plan for now)*
+   - Copy the password for the database user to somewhere, you'll need it later
+   - Enter the cluster, select "Connect" > "Drivers and Client Libraries"
+   - Select "Python" as the language and "PyMongo (Synchronous)" as Client Library
+   - Copy the connection string, replace the `<db_password>` inside with the password you copied
+   - Paste content into the `.streamlit/secrets.toml` in this format:
+   ```toml
+   # You can paste this below the Firebase secrets
+   [mongodb]
+   uri = "CONNECTION_STRING_HERE"
+   ```
+
+## Creating admin account
+> [!NOTE]
+> Once again, if you have been provided the secrets.toml file (located in .streamlit/config.toml), you may ignore this and use the provided admin credentials.
+1) Go back to your Firebase project
+2) Create user in authentication
+   - Select from the sidebar: Security > Authentication
+   - Select "Add user" and input email and password
+   - Copy the newly created user UID, you'll need it later
+3) Set user as administrator
+   - Select from the sidebar: Databases & Storage > Realtime Database
+   - Set the user's role using the following structure:
+   
+   ![users/<the uid you copied>/{"email":"<email address>", "name":"Admin (or any other name)", "role":"admin"}](assets/rtdb-instruction.png)
 
 ## Hosting the application
 1) Running the program
