@@ -31,7 +31,7 @@ def upload(file, filename=None, contentType=None):
 
     return str(fileid)
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def download(fileid):
 
     from bson import ObjectId
