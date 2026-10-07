@@ -447,8 +447,6 @@ def classViewer():
                         total_attendance += 1
                     max_attendance += 1
                 attendance_report_dict[i] = count
-            st.write(individual_attendance)
-
             df = pd.DataFrame(list(attendance_report_dict.items()), columns=["Date", "Number of Students"])
 
             with st.container(border=True):
