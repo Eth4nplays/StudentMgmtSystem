@@ -14,7 +14,18 @@ def fetchAccounts():
 
 @st.dialog("Create account")
 def createAccount():
-    accType = st.segmented_control("User Type", ["coach", "student"], default="coach")
+    user_types = {
+    "Coach": "coach",
+    "Student/Parent": "student"
+    }
+
+    selected = st.segmented_control(
+        "User Type",
+        options=list(user_types.keys()),
+        default="Coach"
+    )
+
+    accType = user_types[selected]
     accName = st.text_input("Name")
     accEmail = st.text_input("Email", validate=("^[^@]+@[^@]+.[^@]+$", "Must be a valid email"))
     accPassword = st.text_input("Temporary Password", validate=("^.{6,}$", "Password must have 6 characters"))
@@ -69,7 +80,7 @@ with st.container(horizontal=True, vertical_alignment="center", width="content")
     if st.button("Refresh", type='secondary', icon=":material/refresh:"):
             accounts = fetchAccounts()
 
-coachTab, studentTab = st.tabs(["Coaches", "Students"])
+coachTab, studentTab = st.tabs(["Coaches", "Students/Parents"])
 
 with coachTab:
     for uid, account in accounts.items():

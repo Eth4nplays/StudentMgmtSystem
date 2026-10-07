@@ -56,7 +56,7 @@ elif role == "coach":
 elif role == "student":
     student = st.Page("dashboards/student.py", title="Dashboard", icon=":material/school:")
     studentInbox = st.Page("dashboards/student/inbox.py", title="Inbox", icon=":material/inbox:")
-    pg = st.navigation({"Student": [student, studentInbox]})
+    pg = st.navigation({"Student/Parent": [student, studentInbox]})
     pg.run()
 else:
     st.navigation([login]).run()

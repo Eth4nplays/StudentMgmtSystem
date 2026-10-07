@@ -56,7 +56,8 @@ def viewSubmission(class_data, student_name, submission, date):
     with st.container(border=True):
         if submission.startswith("fileUpload:"):
             file_id = submission.split("fileUpload:")[1]
-            file_data = helpers.mongodb.download(file_id)
+            with st.spinner("Loading submission..."):
+                file_data = helpers.mongodb.download(file_id)
             st.markdown(f":material/attachment: {file_data['filename']}")
             st.download_button(
                 label="Download Submission",
@@ -73,7 +74,7 @@ def viewSubmission(class_data, student_name, submission, date):
     try:
         currentGrade = class_data["submissions"][student_name].get("grade", 0)
     except:
-        currentGrade = 0
+        currentGrade = "Ungraded"
     with st.container(border=True):
         st.write(":material/grade: Grade: " + str(currentGrade) +" / " + str(class_data["totalGrade"]))
         st.write(":material/comment: Coach Comment:")

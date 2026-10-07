@@ -87,7 +87,8 @@ def undoSubmission(date, file, fileId=None):
     with st.container(horizontal=True):
         if st.button("Yes"):
             if file:
-                helpers.mongodb.delete(fileId)
+                with st.spinner("Deleting file..."):
+                    helpers.mongodb.delete(fileId)
             if firebase.unsubmitTask(userToken, f"{uid} {st.session_state['profile']['name']}", st.session_state['selected_class'], date):
                 st.rerun()
             else:
@@ -126,10 +127,10 @@ def activityViewer(date):
             uploaded_file = st.file_uploader("Upload your submission file", type=["pdf", "docx", "pptx", "xlsx", "txt", "png", "jpg", "jpeg"], accept_multiple_files=False)
             if st.button("Submit File"):
                 if uploaded_file:
-                    file_id = helpers.mongodb.upload(uploaded_file, filename=uploaded_file.name, contentType=uploaded_file.type)
+                    with st.spinner("Uploading file..."):
+                        file_id = helpers.mongodb.upload(uploaded_file, filename=uploaded_file.name, contentType=uploaded_file.type)
                     # append fileUpload: to the file_id to indicate that this is a file submission
                     if firebase.submitTask(userToken, f"{uid} {st.session_state['profile']['name']}", st.session_state['selected_class'], date, f"fileUpload:{file_id}"):
-                        st.success("File submission successful!")
                         st.rerun()
                     else:
                         st.warning("Apologies, but it seems that the submission deadline has passed.")
@@ -143,16 +144,17 @@ def activityViewer(date):
                 with st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center"):
                     st.write(f"**Grade:** {str(submissions.get("grade", "Not graded yet"))} / {str(class_data["totalGrade"])}")
                     st.button("Undo Submission", type="tertiary", key="undo_submission", on_click=undoSubmission, args=(date,True, file_id), icon=":material/undo:")
-                file_data = helpers.mongodb.download(file_id)
-                st.download_button(
-                    label="Download your submission",
-                    data=file_data["data"],
-                    file_name=file_data["filename"],
-                    mime=file_data["contentType"],
-                    icon=":material/download:",
-                    key="download_submission",
-                    type="primary"
-                )
+                with st.spinner("Loading submission..."):
+                    file_data = helpers.mongodb.download(file_id)
+                    st.download_button(
+                        label="Download your submission",
+                        data=file_data["data"],
+                        file_name=file_data["filename"],
+                        mime=file_data["contentType"],
+                        icon=":material/download:",
+                        key="download_submission",
+                        type="primary"
+                    )
             # if the submission is a text submission
             else:
                 with st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center"):
