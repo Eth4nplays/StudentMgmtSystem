@@ -110,7 +110,7 @@ def activityViewer(date):
     submissions = class_data.get("submissions", {}).get(f"{uid} {st.session_state['profile']['name']}")
     st.subheader("Your Submission")
     if submissions == None:
-        text, file = st.tabs(["Text Submission", "File Submission"])
+        text, file = st.tabs([":material/description: Text Submission", ":material/attachment: File Submission"])
         with text:
             submission = st.text_area("Submission", placeholder="Enter your submission here...")
             if st.button("Submit"):
@@ -127,6 +127,7 @@ def activityViewer(date):
             if st.button("Submit File"):
                 if uploaded_file:
                     file_id = helpers.mongodb.upload(uploaded_file, filename=uploaded_file.name, contentType=uploaded_file.type)
+                    # append fileUpload: to the file_id to indicate that this is a file submission
                     if firebase.submitTask(userToken, f"{uid} {st.session_state['profile']['name']}", st.session_state['selected_class'], date, f"fileUpload:{file_id}"):
                         st.success("File submission successful!")
                         st.rerun()

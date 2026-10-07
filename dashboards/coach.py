@@ -224,9 +224,9 @@ def addActivity(class_data):
 def viewSubmission(class_data, student_name, submission, date):
     with st.container(border=True):
         if submission.startswith("fileUpload:"):
-            st.write("This is a file submission. You can download the file below.")
             file_id = submission.split("fileUpload:")[1]
             file_data = helpers.mongodb.download(file_id)
+            st.markdown(f":material/attachment: {file_data['filename']}")
             st.download_button(
                 label="Download Submission",
                 data=file_data["data"],
