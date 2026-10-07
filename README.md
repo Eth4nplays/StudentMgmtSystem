@@ -1,4 +1,4 @@
-<img width="280.4" height="204" alt="Student Management System by B.E. Water" src="https://github.com/user-attachments/assets/d2ed9b9f-3817-4843-b9a8-884a561102e9" /> 
+<img width="280.4" height="204" alt="Student Management System by B.E. Water" src="assets/logo.png" /> 
 
 # Student Management System
 A web application for managing after-school activities with different user roles using Firebase, MongoDB and Python with Streamlit
