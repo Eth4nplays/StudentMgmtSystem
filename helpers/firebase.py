@@ -297,7 +297,7 @@ def editTask(id_token, className, date, taskName, contents, totalGrade, deadline
     )
     payload = {"title":taskName, "contents":contents, "totalGrade":totalGrade, "deadline":deadline}
 
-    response = requests.put(url, json=payload)
+    response = requests.patch(url, json=payload)
 
     if response.ok:
         return response.json()
