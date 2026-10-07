@@ -85,6 +85,7 @@ def classViewer():
 
 
 if not st.session_state['class_view']:
+    st.page_link("dashboards/admin.py", label="Back", icon=":material/arrow_back:")
     st.title(f"Reports")
     list_of_classes = firebase.getClasses(userToken)
     for i in list_of_classes.items():
