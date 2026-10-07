@@ -7,6 +7,7 @@ client = MongoClient(st.secrets["mongodb"]["uri"])
 db = client["StudentMgmtSystem"]
 fs = GridFS(db)
 
+# mongodb implementation for file upload and download
 
 def upload(file, filename=None, contentType=None):
 
