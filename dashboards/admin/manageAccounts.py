@@ -31,8 +31,8 @@ def createAccount():
     accPassword = st.text_input("Temporary Password", validate=("^.{6,}$", "Password must have 6 characters"))
     if st.button("Create Account", type="primary"):
         if accType!="" and accEmail!="" and accName!="" and accPassword!="":
-            newAccount = firebase.createAccount(email=accEmail, password=accPassword)
-            firebase.setData(uid=newAccount["localId"], id_token=newAccount["idToken"], role=accType, name=accName, email=accEmail)
+            newAccount = firebase.createAccount(email=accEmail.strip(), password=accPassword.strip())
+            firebase.setData(uid=newAccount["localId"], id_token=newAccount["idToken"], role=accType, name=accName, email=accEmail.strip())
             st.rerun()
         else:
             st.error("All of the fields must be filled in before creating an account")

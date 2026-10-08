@@ -11,7 +11,7 @@ with st.form("login_form"):
     login = st.form_submit_button("Login", type="primary", icon=":material/login:", key="loginButton")
 
     if login:
-        result = firebase.login(emailInput, passwordInput)
+        result = firebase.login(emailInput.strip(), passwordInput.strip())
         if result:
             batchCookies({"uid":result["localId"],
                         "token":result["idToken"],
