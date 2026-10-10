@@ -49,7 +49,7 @@ def show_attendance_report(class_data):
         return
 
     #make a bar chart of attendance by date with border
-    st.bar_chart(pd.DataFrame(attendance_by_date), x="Date", y="Students Present", use_container_width=True)
+    st.bar_chart(pd.DataFrame(attendance_by_date), x="Date", y="Students Present")
     attendance_rate = total_present / total_records * 100 if total_records else 0
     rate_column, records_column = st.columns(2)
     rate_column.metric("Class Attendance Rate", f"{attendance_rate:.1f}%")

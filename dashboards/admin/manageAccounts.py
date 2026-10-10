@@ -80,13 +80,30 @@ with st.container(horizontal=True, vertical_alignment="center", width="content")
     if st.button("Refresh", type='secondary', icon=":material/refresh:"):
             accounts = fetchAccounts()
 
+search_query = st.text_input(
+    "Search accounts",
+    placeholder="Search by name, email, or user ID",
+    icon=":material/search:",
+).strip().casefold()
+
+accounts = accounts or {}
 coachTab, studentTab = st.tabs(["Coaches", "Students/Parents"])
 
 with coachTab:
     for uid, account in accounts.items():
-        if account["role"] == "coach":
+        if account["role"] == "coach" and (
+            not search_query
+            or search_query in account["name"].casefold()
+            or search_query in account["email"].casefold()
+            or search_query in uid.casefold()
+        ):
             accountCard(uid, account)
 with studentTab:
     for uid, account in accounts.items():
-        if account["role"] == "student":
+        if account["role"] == "student" and (
+            not search_query
+            or search_query in account["name"].casefold()
+            or search_query in account["email"].casefold()
+            or search_query in uid.casefold()
+        ):
             accountCard(uid, account)
