@@ -308,6 +308,26 @@ def classViewer():
             with st.container(border=True):
                 st.text("Total Attendance")
                 st.subheader(f"{total_attendance}/{total_days}")
+
+        st.subheader("Class Academic Report")
+        grades = firebase.getClassReports(userToken, st.session_state["selected_class"])
+        if grades is None:
+            st.error("Failed to retrieve assignment reports.")
+        else:
+            student_name = f"{uid} {st.session_state['profile']['name']}"
+            student_grades = grades.get(student_name, {})
+            if not student_grades:
+                st.info("No assignments found in this class.")
+            else:
+                activity_grades = [
+                    {
+                        "Activity": report["title"],
+                        "Grade": "Not graded" if report["grade"] is None else report["grade"],
+                        "Maximum Grade": report["totalGrade"],
+                    }
+                    for report in student_grades.values()
+                ]
+                st.dataframe(pd.DataFrame(activity_grades), width="stretch", hide_index=True)
                     
 
     if people.open:
