@@ -88,6 +88,7 @@ database_url = "DATABASE_URL_HERE"
 2) Setting up a cluster
    - Create a cluster in your project *(you can use the free plan for now)*
    - Copy the password for the database user to somewhere, you'll need it later
+3) Pasting secrets for connection to database
    - Enter the cluster, select "Connect" > "Drivers and Client Libraries"
    - Select "Python" as the language and "PyMongo (Synchronous)" as Client Library
    - Copy the connection string, replace the `<db_password>` inside with the password you copied
