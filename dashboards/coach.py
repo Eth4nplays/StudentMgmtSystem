@@ -30,6 +30,34 @@ if cookies.getCookies("uid") != None:
 else:
     uid = st.session_state['uid']
 
+def hasUnreadAnnouncement():
+    announcements = firebase.getAnnouncement(userToken)
+    if not announcements:
+        return False
+
+    available_roles = {"Coach", st.session_state['profile']['name']}
+    available_dates = [
+        datetime.datetime.strptime(date, "%y %m %d %H %M")
+        for date, announcement in announcements.items()
+        if available_roles.intersection(announcement.get("roles", []))
+    ]
+    if not available_dates:
+        return False
+
+    latest_announcement = max(available_dates)
+    last_read = (
+        st.session_state['profile'].get("lastreadannouncement")
+        or st.session_state['profile'].get("lastread")
+    )
+    if not last_read:
+        return True
+
+    last_read_announcement = datetime.datetime.strptime(last_read, "%y %m %d %H %M")
+    return latest_announcement > last_read_announcement
+
+if "has_unread_announcement" not in st.session_state:
+    st.session_state["has_unread_announcement"] = hasUnreadAnnouncement()
+
 @st.dialog("Create Class")
 def createClass():
     className = st.text_input("Class Name")
@@ -250,7 +278,8 @@ def viewSubmission(class_data, student_name, submission, date):
     comment = st.text_area("Comment", value=class_data["submissions"][student_name].get("comment", ""))
     if st.button("Submit"):
         firebase.gradeTask(userToken, student_name, st.session_state['selected_class'], st.session_state['activityDate'], grade, comment)
-        #TODO: notify the student that their submission has been graded
+        firebase.setAnnouncement(userToken, title=f"Graded: {class_data['title']}", content=f'''Your submission for {class_data['title']} has been graded. You received a grade of {grade}/{class_data['totalGrade']}.
+                                 **:material/comment: Comment:** {comment}''', roles=[student_name.split()[1]], date=datetime.datetime.now().strftime("%y %m %d %H %M"))
         
         st.rerun()
 
@@ -483,7 +512,12 @@ def classViewer():
 if not st.session_state['class_view']:
     st.title(f"Welcome, {st.session_state['profile']['name']}")
 
-    imageButtons("dashboards/coach/inbox.py", "assets/inbox.png", 1646, 316)
+    inbox_icon = (
+        "assets/inbox_unread.png"
+        if st.session_state["has_unread_announcement"]
+        else "assets/inbox.png"
+    )
+    imageButtons("dashboards/coach/inbox.py", inbox_icon, 1646, 316)
     with st.container(horizontal=True, vertical_alignment="bottom"):
         st.subheader("Your Classes", width="content")
         st.divider()

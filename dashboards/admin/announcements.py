@@ -73,7 +73,7 @@ def announcementCard(title, contents):
             action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Announcement"], key=f"menu{title}")
             if action == "Delete Announcement":
                 deleteAnnouncement(title)
-        st.write(contents["content"])
+        st.markdown(contents["content"])
         st.caption(datetime.datetime.strptime(title, "%y %m %d %H %M").strftime("%d %B %Y, %I:%M %p"))
         
 
