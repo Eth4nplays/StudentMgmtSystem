@@ -279,7 +279,8 @@ def viewSubmission(class_data, student_name, submission, date):
     if st.button("Submit"):
         firebase.gradeTask(userToken, student_name, st.session_state['selected_class'], st.session_state['activityDate'], grade, comment)
         firebase.setAnnouncement(userToken, title=f"Graded: {class_data['title']}", content=f'''Your submission for {class_data['title']} has been graded. You received a grade of {grade}/{class_data['totalGrade']}.
-                                 **:material/comment: Comment:** {comment}''', roles=[student_name.split()[1]], date=datetime.datetime.now().strftime("%y %m %d %H %M"))
+                                 
+**:material/comment: Comment:** {comment}''', roles=[student_name.split()[1]], date=datetime.datetime.now().strftime("%y %m %d %H %M"))
         
         st.rerun()
 
