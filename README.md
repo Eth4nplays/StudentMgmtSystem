@@ -110,7 +110,7 @@ database_url = "DATABASE_URL_HERE"
    - Select from the sidebar: Databases & Storage > Realtime Database
    - Set the user's role using the following structure:
    
-   ![users/<the uid you copied>/{"email":"<email address>", "name":"Admin (or any other name)", "role":"admin"}](assets/rtdb-instruction.png)
+   ![users/<the uid you copied>/{"email":"<email address>", "name":"Admin (or any other name)", "role":"admin"}](rtdb-instruction.png)
 
 ## Hosting the application
 1) Running the program
