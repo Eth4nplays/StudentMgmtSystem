@@ -29,6 +29,34 @@ if cookies.getCookies("uid") is not None:
 else:
     uid = st.session_state['uid']
 
+def hasUnreadAnnouncement():
+    announcements = firebase.getAnnouncement(userToken)
+    if not announcements:
+        return False
+
+    available_roles = {"Student", st.session_state['profile']['name']}
+    available_dates = [
+        datetime.strptime(date, "%y %m %d %H %M")
+        for date, announcement in announcements.items()
+        if available_roles.intersection(announcement.get("roles", []))
+    ]
+    if not available_dates:
+        return False
+
+    latest_announcement = max(available_dates)
+    last_read = (
+        st.session_state['profile'].get("lastreadannouncement")
+        or st.session_state['profile'].get("lastread")
+    )
+    if not last_read:
+        return True
+
+    last_read_announcement = datetime.strptime(last_read, "%y %m %d %H %M")
+    return latest_announcement > last_read_announcement
+
+if "has_unread_announcement" not in st.session_state:
+    st.session_state["has_unread_announcement"] = hasUnreadAnnouncement()
+
 @st.dialog("Join Class")
 def joinClass():
     classCode = st.text_input("Enter Class Code")
@@ -299,7 +327,12 @@ def classViewer():
 if not st.session_state['class_view']:
     st.title(f"Welcome, {st.session_state['profile']['name']}")
 
-    imageButtons("dashboards/student/inbox.py", "assets/inbox.png", 1646, 316)
+    inbox_icon = (
+        "assets/inbox_unread.png"
+        if st.session_state["has_unread_announcement"]
+        else "assets/inbox.png"
+    )
+    imageButtons("dashboards/student/inbox.py", inbox_icon, 1646, 316)
 
     with st.container(horizontal=True, vertical_alignment="bottom"):
         st.subheader("Your Classes", width="content")

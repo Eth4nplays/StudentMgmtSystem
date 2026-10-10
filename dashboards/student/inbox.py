@@ -11,24 +11,81 @@ if cookies.getCookies("token") != None:
 else:
     userToken = st.session_state['token']
 
+if cookies.getCookies("uid") != None:
+        uid = cookies.getCookies("uid")
+else:
+    uid = st.session_state['uid']
+
 announcements = firebase.getAnnouncement(userToken)
 
-def announcementCard(title, contents):
+def announcementCard(title, contents, unread):
     with st.container(border=True):
 
         with st.container(horizontal=True, vertical_alignment="center"):
             st.subheader(contents["title"])
+            if unread:
+                st.badge("Unread", color="red")
         st.markdown(contents["content"])
         st.caption(datetime.datetime.strptime(title, "%y %m %d %H %M").strftime("%d %B %Y, %I:%M %p"))
 
 with st.container(horizontal=True, vertical_alignment="center", width="content"):
 
-    if st.button("Refresh", type='secondary', icon=":material/refresh:"):
-            announcements = firebase.getAnnouncement(userToken)
+    refresh_clicked = st.button("Refresh", type='secondary', icon=":material/refresh:")
 
-if announcements != None:
-    for date, contents in reversed(announcements.items()):
-        if "Student" in contents["roles"] or st.session_state['profile']['name'] in contents["roles"]:    
-            announcementCard(date, contents)
+    available_announcements = {
+        date: contents
+        for date, contents in (announcements or {}).items()
+        if "Student" in contents.get("roles", [])
+        or st.session_state['profile']['name'] in contents.get("roles", [])
+    }
+    latest_announcement = max(
+        available_announcements,
+        key=lambda date: datetime.datetime.strptime(date, "%y %m %d %H %M"),
+        default=None
+    )
+
+    if st.button(
+        "Mark all as read",
+        type="secondary",
+        icon=":material/done_all:",
+        disabled=latest_announcement is None
+    ):
+        if firebase.setLastReadAnnouncement(uid, userToken, latest_announcement):
+            st.session_state['profile']['lastread'] = latest_announcement
+            st.session_state['profile']['lastreadannouncement'] = latest_announcement
+            st.session_state["has_unread_announcement"] = False
+            st.rerun()
+        else:
+            st.error("Failed to mark announcements as read.")
+
+last_read = (
+    st.session_state['profile'].get("lastreadannouncement")
+    or st.session_state['profile'].get("lastread")
+)
+last_read_datetime = (
+    datetime.datetime.strptime(last_read, "%y %m %d %H %M")
+    if last_read
+    else None
+)
+latest_announcement_datetime = (
+    datetime.datetime.strptime(latest_announcement, "%y %m %d %H %M")
+    if latest_announcement
+    else None
+)
+has_unread_announcement = (
+    latest_announcement_datetime is not None
+    and (
+        last_read_datetime is None
+        or latest_announcement_datetime > last_read_datetime
+    )
+)
+if refresh_clicked:
+    st.session_state["has_unread_announcement"] = has_unread_announcement
+
+if available_announcements:
+    for date, contents in reversed(list(available_announcements.items())):
+        announcement_datetime = datetime.datetime.strptime(date, "%y %m %d %H %M")
+        is_unread = last_read_datetime is None or announcement_datetime > last_read_datetime
+        announcementCard(date, contents, is_unread)
 else:
-     st.write("No announcements yet.")
+     st.write("No announcements available.")

@@ -160,6 +160,20 @@ def setData(uid, id_token, role, name, email):
 
     return None
 
+def setLastReadAnnouncement(uid, id_token, date):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/users/{uid}.json"
+        f"?auth={id_token}"
+    )
+
+    payload = {"lastread":date}
+    response = requests.patch(url, json=payload)
+    if response.ok:
+        return response.json()
+
+    return None
+
 def setAnnouncement(id_token, roles, content, title, date):
     url = (
         f"{st.secrets['firebase']['database_url']}"
