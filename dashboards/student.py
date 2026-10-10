@@ -186,8 +186,7 @@ def classViewer():
                                 if st.button("View Activity", key=f"view_{class_data['tasks'][i]}"):
                                     viewActivity(i)
 
-                except Exception as e:
-                    st.write(e)
+                except Exception as e: 
                     st.write("No activities found. Create your first one below!")
         
 
