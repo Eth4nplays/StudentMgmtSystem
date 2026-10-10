@@ -113,7 +113,7 @@ database_url = "DATABASE_URL_HERE"
    
    ![users/<the uid you copied>/{"email":"<email address>", "name":"Admin (or any other name)", "role":"admin"}](rtdb-instruction.png)
 
-## Hosting the application
+## Running the application
 1) Running the program
 Run the following:
 ```bash
