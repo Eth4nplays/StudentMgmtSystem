@@ -10,15 +10,13 @@ if cookies.getCookies("token") != None:
 else:
     userToken = st.session_state['token']
 
-def classCard(i):
+def classCard(class_name, class_data, coach_name):
     with st.container(border=True):
-        class_data = firebase.getClass(userToken, i[0])    
-
         with st.container(horizontal=True, vertical_alignment="center"):
-            st.subheader(i[0], width="content")
-            st.caption(f"Coach: {firebase.getData(class_data["classOwner"], userToken)["name"]}")
-            if st.button("Edit", type="secondary", icon=":material/edit:", key=f"editSchedule{i}"):
-                editSchedule(class_data, i[0])
+            st.subheader(class_name, width="content")
+            st.caption(f"Coach: {coach_name}")
+            if st.button("Edit", type="secondary", icon=":material/edit:", key=f"editSchedule{class_name}"):
+                editSchedule(class_data, class_name)
         if class_data:
             df = pd.read_csv(
                 StringIO(class_data["classSchedule"].replace("\\n", "\n")),
@@ -111,6 +109,34 @@ def editSchedule(class_data, selected_class):
         else:
             st.error("Failed to update schedule.")
 
+search_query = st.text_input(
+    "Search schedules",
+    placeholder="Search by class or coach name",
+    icon=":material/search:",
+).strip().casefold()
+
 list_of_classes = firebase.getClasses(userToken)
-for i in list_of_classes.items():
-    classCard(i)
+if list_of_classes is None:
+    st.error("Failed to retrieve class schedules.")
+else:
+    accounts = firebase.getAccounts(userToken) or {}
+    matching_classes = []
+    for class_name, class_data in list_of_classes.items():
+        class_data = class_data or {}
+        owner_id = class_data.get("classOwner")
+        coach = accounts.get(owner_id) or {}
+        coach_name = coach.get("name") or (
+            f"Coach ({owner_id})" if owner_id else "Unassigned coach"
+        )
+        if (
+            not search_query
+            or search_query in class_name.casefold()
+            or search_query in coach_name.casefold()
+        ):
+            matching_classes.append((class_name, class_data, coach_name))
+
+    if not matching_classes:
+        st.info("No schedules match your search.")
+    else:
+        for class_name, class_data, coach_name in matching_classes:
+            classCard(class_name, class_data, coach_name)
