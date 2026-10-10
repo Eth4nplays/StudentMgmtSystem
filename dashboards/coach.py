@@ -250,7 +250,7 @@ def viewSubmission(class_data, student_name, submission, date):
     comment = st.text_area("Comment", value=class_data["submissions"][student_name].get("comment", ""))
     if st.button("Submit"):
         firebase.gradeTask(userToken, student_name, st.session_state['selected_class'], st.session_state['activityDate'], grade, comment)
-        #notify the student that their submission has been graded
+        #TODO: notify the student that their submission has been graded
         
         st.rerun()
 
