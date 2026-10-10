@@ -250,6 +250,8 @@ def viewSubmission(class_data, student_name, submission, date):
     comment = st.text_area("Comment", value=class_data["submissions"][student_name].get("comment", ""))
     if st.button("Submit"):
         firebase.gradeTask(userToken, student_name, st.session_state['selected_class'], st.session_state['activityDate'], grade, comment)
+        #notify the student that their submission has been graded
+        
         st.rerun()
 
 
@@ -453,7 +455,7 @@ def classViewer():
                 st.bar_chart(df, x="Date", y="Number of Students", color="Number of Students")
             with st.container(border=True):
                 st.text("Class Attendance Rate")
-                st.subheader(f"{(total_attendance/max_attendance)*100}%")
+                st.subheader(f"{round((total_attendance/max_attendance)*100, 2)}%")
             with st.container(border=True):
                 st.text("Individual Student Attendance")
                 st.dataframe(pd.DataFrame(list(individual_attendance.items()), columns=["Student", "Number of Classes Attended"]))
@@ -462,6 +464,18 @@ def classViewer():
             st.write("No attendance data yet.")
 
         st.subheader("Class Academic Report")
+        grades = firebase.getClassReports(userToken, st.session_state["selected_class"])
+        with st.container(border=True):
+            # show each students name with expandable arrow to show their grades for each activity
+            for i in grades:
+                with st.expander(i.split()[1]):
+                    #find and show TITLE FIRST of each activity and thier grades in a table
+                    activity_grades = []
+                    for j in grades[i]:
+                        activity_grades.append([grades[i][j]["title"], grades[i][j]["grade"]])
+                    st.dataframe(pd.DataFrame(activity_grades, columns=["Activity", "Grade"]), width="stretch", use_container_width=True)
+
+            
 
 
 

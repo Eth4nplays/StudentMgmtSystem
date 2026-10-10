@@ -412,6 +412,35 @@ def getClass(id_token, className):
 
     return None
 
+def getClassReports(id_token, className):
+    
+    class_data = getClass(id_token, className)
+    if class_data is None:
+        return None
+
+    tasks = class_data.get("tasks") or {}
+    students = set(class_data.get("students") or [])
+    for task in tasks.values():
+        students.update((task.get("submissions") or {}).keys())
+
+    grades = {
+        student: {
+            task_id: {
+                "title": task.get("title", task_id),
+                "grade": "Not submitted",
+                "totalGrade": task.get("totalGrade"),
+            }
+            for task_id, task in tasks.items()
+        }
+        for student in students
+    }
+
+    for task_id, task in tasks.items():
+        for student, submission in (task.get("submissions") or {}).items():
+            grades[student][task_id]["grade"] = submission.get("grade")
+
+    return grades
+
 def getClasses(id_token):
     url = (
         f"{st.secrets['firebase']['database_url']}"
