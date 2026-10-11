@@ -215,7 +215,7 @@ def classViewer():
                                     viewActivity(i)
 
                 except Exception as e: 
-                    st.write("No activities found. Create your first one below!")
+                    st.write("No activities found.")
         
 
     with schedule:
