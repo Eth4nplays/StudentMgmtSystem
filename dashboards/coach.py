@@ -369,7 +369,6 @@ def classViewer():
                         if action == "Delete Activity":
                             deleteActivity(class_data, i)
             except Exception as e:
-                st.write(e)
                 st.write("No activities found. Create your first one below!")
                     
 
