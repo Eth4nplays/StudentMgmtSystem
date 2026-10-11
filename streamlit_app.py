@@ -4,6 +4,7 @@ import helpers.firebase as firebase
 import firebase_admin
 from firebase_admin import credentials
 from helpers.imagebuttons import encodeImage
+from helpers.information import infobox
 
 st.set_option("client.toolbarMode", "viewer")
 login = st.Page("login.py", title="School Activity Management System", icon=":material/school:")
@@ -84,8 +85,10 @@ if role == "admin" or role == "coach" or role == "student":
             """,
             unsafe_allow_html=True,
         )
-        if st.button("Logout", icon=":material/logout:", key="logout"):
-            logout()
+        with st.container(horizontal=True):
+            if st.button("Logout", icon=":material/logout:", key="logout"):
+                logout()
+            infobox(preset=role, text="Guide", icon=":material/info:")
 
 # initialize firebase admin if the user is logged in as an admin
 if role == "admin":
