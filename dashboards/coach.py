@@ -457,45 +457,44 @@ def classViewer():
 
     with reports:
         # show a graph depicting class attendance
-        st.subheader("Class Attendance Report")
-        #show graph taking data from attendance
+        with st.expander(":material/assignment: Attendance Report"):
+            #show graph taking data from attendance
 
-        attendance_report_dict = {}
-        individual_attendance = {}
-        max_attendance = 0
-        total_attendance = 0
-        totaldaysofattendance = len(class_data["attendance"])
+            attendance_report_dict = {}
+            individual_attendance = {}
+            max_attendance = 0
+            total_attendance = 0
+            totaldaysofattendance = len(class_data["attendance"])
 
-        try:
-            for i in (class_data["students"]):
-                for j in (class_data["attendance"]):
-                    if i.split()[1] in class_data["attendance"][j]:
-                        individual_attendance[i.split()[1]] = individual_attendance.get(i.split()[1], 0) + (1 if class_data["attendance"][j][i.split()[1]] == True else 0)
-            for i in (class_data["attendance"]):
-                count = 0
-                for j in class_data["attendance"][i]:
-                    if class_data["attendance"][i][j] == True:
-                        count += 1
-                        total_attendance += 1
-                    max_attendance += 1
-                attendance_report_dict[i] = count
-            df = pd.DataFrame(list(attendance_report_dict.items()), columns=["Date", "Number of Students"])
+            try:
+                for i in (class_data["students"]):
+                    for j in (class_data["attendance"]):
+                        if i.split()[1] in class_data["attendance"][j]:
+                            individual_attendance[i.split()[1]] = individual_attendance.get(i.split()[1], 0) + (1 if class_data["attendance"][j][i.split()[1]] == True else 0)
+                for i in (class_data["attendance"]):
+                    count = 0
+                    for j in class_data["attendance"][i]:
+                        if class_data["attendance"][i][j] == True:
+                            count += 1
+                            total_attendance += 1
+                        max_attendance += 1
+                    attendance_report_dict[i] = count
+                df = pd.DataFrame(list(attendance_report_dict.items()), columns=["Date", "Number of Students"])
 
-            with st.container(border=True):
-                st.bar_chart(df, x="Date", y="Number of Students", color="Number of Students")
-            with st.container(border=True):
-                st.text("Class Attendance Rate")
-                st.subheader(f"{round((total_attendance/max_attendance)*100, 2)}%")
-            with st.container(border=True):
-                st.text("Individual Student Attendance")
-                st.dataframe(pd.DataFrame(list(individual_attendance.items()), columns=["Student", "Number of Classes Attended"]))
+                with st.container(border=True):
+                    st.bar_chart(df, x="Date", y="Number of Students", color="Number of Students")
+                with st.container(border=True):
+                    st.text("Class Attendance Rate")
+                    st.subheader(f"{round((total_attendance/max_attendance)*100, 2)}%")
+                with st.container(border=True):
+                    st.text("Individual Student Attendance")
+                    st.dataframe(pd.DataFrame(list(individual_attendance.items()), columns=["Student", "Number of Classes Attended"]))
 
-        except:
-            st.write("No attendance data yet.")
+            except:
+                st.write("No attendance data yet.")
 
-        st.subheader("Class Academic Report")
-        grades = firebase.getClassReports(userToken, st.session_state["selected_class"])
-        with st.container(border=True):
+        with st.expander(":material/school: Academic Report"):
+            grades = firebase.getClassReports(userToken, st.session_state["selected_class"])
             # show each students name with expandable arrow to show their grades for each activity
             for i in grades:
                 with st.expander(i.split()[1]):

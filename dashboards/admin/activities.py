@@ -144,8 +144,7 @@ def classViewer():
                     if st.button("View Activity", key=f"view_{class_data['tasks'][i]}"):
                         viewActivity(i)
     except Exception as e:
-        st.write(e)
-        st.write("No activities found. Create your first one below!")
+        st.write("No activities found.")
 
 if not st.session_state['class_view']:
     st.page_link("dashboards/admin.py", label="Back", icon=":material/arrow_back:")

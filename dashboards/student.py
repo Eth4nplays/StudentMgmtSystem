@@ -247,87 +247,87 @@ def classViewer():
             st.error("Failed to retrieve class schedule.")
 
     with reports:
-        st.subheader("Attendance Report")
+        with st.expander(":material/assignment: Attendance Report"):
 
-        name = st.session_state['profile']['name']
+            name = st.session_state['profile']['name']
 
-        with st.container(horizontal=True):
-            month = st.selectbox(
-                "Month",
-                range(1, 13),
-                format_func=lambda m: calendar.month_name[m],
-                index= datetime.now().month-1
-            )
+            with st.container(horizontal=True):
+                month = st.selectbox(
+                    "Month",
+                    range(1, 13),
+                    format_func=lambda m: calendar.month_name[m],
+                    index= datetime.now().month-1
+                )
 
-            year = st.selectbox(
-                "Year",
-                range(2025, datetime.now().year+1),
-                index= datetime.now().year-2025
-            )
+                year = st.selectbox(
+                    "Year",
+                    range(2025, datetime.now().year+1),
+                    index= datetime.now().year-2025
+                )
 
-        with st.container(border=True):
-            # Build row for the chosen month
-            rows = []
-            num_days = calendar.monthrange(year, month)[1]
-
-            total_attendance = 0
-            total_days = 0
-
-            for day in range(1, num_days + 1):
-                date_str = f"{day:02d}-{month:02d}-{year}"
-                records = class_data["attendance"].get(date_str, {})
-
-                if name not in records:
-                    continue
-                else:
-                    total_days += 1
-
-                attended = records.get(name, False)
-
-                rows.append({
-                    "Date": date_str,
-                    "Attendance": attended
-                })
-
-                if attended:
-                    total_attendance += 1
-
-            # Convert to DataFrame
-            df = pd.DataFrame(rows)
-
-            # Display table
-            st.dataframe(df, width="stretch", hide_index=True)
-
-        with st.container(horizontal=True):
             with st.container(border=True):
-                st.text("Class Attendance Rate")
-                try:
-                    st.subheader(f"{round((total_attendance/total_days)*100, 1)}%")
-                except:
-                    st.subheader(f"0%")
-            with st.container(border=True):
-                st.text("Total Attendance")
-                st.subheader(f"{total_attendance}/{total_days}")
+                # Build row for the chosen month
+                rows = []
+                num_days = calendar.monthrange(year, month)[1]
 
-        st.subheader("Class Academic Report")
-        grades = firebase.getClassReports(userToken, st.session_state["selected_class"])
-        if grades is None:
-            st.error("Failed to retrieve assignment reports.")
-        else:
-            student_name = f"{uid} {st.session_state['profile']['name']}"
-            student_grades = grades.get(student_name, {})
-            if not student_grades:
-                st.info("No assignments found in this class.")
+                total_attendance = 0
+                total_days = 0
+
+                for day in range(1, num_days + 1):
+                    date_str = f"{day:02d}-{month:02d}-{year}"
+                    records = class_data["attendance"].get(date_str, {})
+
+                    if name not in records:
+                        continue
+                    else:
+                        total_days += 1
+
+                    attended = records.get(name, False)
+
+                    rows.append({
+                        "Date": date_str,
+                        "Attendance": attended
+                    })
+
+                    if attended:
+                        total_attendance += 1
+
+                # Convert to DataFrame
+                df = pd.DataFrame(rows)
+
+                # Display table
+                st.dataframe(df, width="stretch", hide_index=True)
+
+            with st.container(horizontal=True):
+                with st.container(border=True):
+                    st.text("Class Attendance Rate")
+                    try:
+                        st.subheader(f"{round((total_attendance/total_days)*100, 1)}%")
+                    except:
+                        st.subheader(f"0%")
+                with st.container(border=True):
+                    st.text("Total Attendance")
+                    st.subheader(f"{total_attendance}/{total_days}")
+
+        with st.expander(":material/school: Academic Report"):
+            grades = firebase.getClassReports(userToken, st.session_state["selected_class"])
+            if grades is None:
+                st.error("Failed to retrieve assignment reports.")
             else:
-                activity_grades = [
-                    {
-                        "Activity": report["title"],
-                        "Grade": "Not graded" if report["grade"] is None else report["grade"],
-                        "Maximum Grade": report["totalGrade"],
-                    }
-                    for report in student_grades.values()
-                ]
-                st.dataframe(pd.DataFrame(activity_grades), width="stretch", hide_index=True)
+                student_name = f"{uid} {st.session_state['profile']['name']}"
+                student_grades = grades.get(student_name, {})
+                if not student_grades:
+                    st.info("No assignments found in this class.")
+                else:
+                    activity_grades = [
+                        {
+                            "Activity": report["title"],
+                            "Grade": "Not graded" if report["grade"] is None else report["grade"],
+                            "Maximum Grade": report["totalGrade"],
+                        }
+                        for report in student_grades.values()
+                    ]
+                    st.dataframe(pd.DataFrame(activity_grades), width="stretch", hide_index=True)
                     
 
     if people.open:
