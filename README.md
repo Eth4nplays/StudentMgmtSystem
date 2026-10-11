@@ -15,7 +15,7 @@ A web application for managing after-school activities with different user roles
 # Setting up
 ## Requirements
 You must have installed:
-- Python 3.12
+- Python 3.12 or above
 - Git
 
 ## Cloning the repo
