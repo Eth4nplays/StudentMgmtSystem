@@ -15,7 +15,7 @@ def getCookies(cookie):
 
 @st.dialog("Logged out", dismissible=False)
 def logout():
-    st.write("Please refesh your browser.")
+    st.write("Please refesh your browser or reopen the website.")
     cookies = ["uid", "token", "refreshToken"]
 
     for i in cookies:
