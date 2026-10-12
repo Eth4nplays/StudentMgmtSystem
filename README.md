@@ -189,7 +189,6 @@ python -m streamlit run
    - In the dashboard once logged in, at the bottom of the dashboard, select the **[+ Join Class]** button.
    - Input the class code.
    - Select **[Join Class]** to create the class
-   - Within the dashboard, you can view the class code for students to join.
 ### Viewing and participating in class
    - In the dashboard, select **[View Class]** in the newly joined class.
    - You can view Activities, Reports, Schedule, and the class members.
