@@ -72,6 +72,7 @@ def createClass():
     for i in ["Start Time", "End Time"]:
         df[i] = pd.to_datetime(df[i], format="%H:%M:%S").dt.time
 
+    st.write("Class schedule")
     classSchedule = st.data_editor(
             df,
             hide_index=True,
