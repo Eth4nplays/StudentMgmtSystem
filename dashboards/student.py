@@ -114,10 +114,10 @@ def undoSubmission(date, file, fileId=None):
     st.write("Are you sure you want to undo your submission? This action cannot be undone.")
     with st.container(horizontal=True):
         if st.button("Yes"):
-            if file:
-                with st.spinner("Deleting file..."):
-                    helpers.mongodb.delete(fileId)
             if firebase.unsubmitTask(userToken, f"{uid} {st.session_state['profile']['name']}", st.session_state['selected_class'], date):
+                if file:
+                    with st.spinner("Deleting file..."):
+                        helpers.mongodb.delete(fileId)
                 st.rerun()
             else:
                 st.warning("Apologies, but it seems that the submission deadline has passed.")
