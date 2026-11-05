@@ -10,6 +10,7 @@ A web application for managing after-school activities with different user roles
    - Reports
    - Attendance
    - Schedule
+- Room booking
 - Announcements & Inbox
 
 # Setting up
@@ -155,6 +156,10 @@ python -m streamlit run
    - Currently, there are no classes created by coaches yet, therefore this page will not be used at the moment.
    - Below is an example of a page under the "Classes" section.
    ![Reports page for admin](readme_assets/classesadmin-page.png)
+
+### Managing rooms
+   - In the dashboard or sidebar, select **[Room Booking]** to add rooms and view their bookings by date and time.
+   - Coaches can book an available room and time from **[Room Booking]** by selecting one of their classes. Overlapping bookings are rejected.
 
 ## Coach
 

@@ -46,13 +46,15 @@ if role == "admin":
     reports = st.Page("dashboards/admin/reports.py", title="Reports", icon=":material/analytics:")
     schedule = st.Page("dashboards/admin/schedule.py", title="Schedules", icon=":material/calendar_month:")
     activities = st.Page("dashboards/admin/activities.py", title="Activities", icon=":material/directions_run:")
+    roombooking = st.Page("dashboards/admin/roombooking.py", title="Room Booking", icon=":material/meeting_room:")
 
-    pg = st.navigation({"Admin": [admin, manageAccount, announcements], "Classes": [reports, schedule, activities]})
+    pg = st.navigation({"Admin": [admin, manageAccount, announcements], "Classes": [reports, schedule, activities, roombooking]})
     pg.run()
 elif role == "coach":
     coach = st.Page("dashboards/coach.py", title="Dashboard", icon=":material/school:")
     coachInbox = st.Page("dashboards/coach/inbox.py", title="Inbox", icon=":material/inbox:")
-    pg = st.navigation({"Coach": [coach, coachInbox]})
+    roombookingCoach = st.Page("dashboards/coach/roombooking.py", title="Room Booking", icon=":material/meeting_room:")
+    pg = st.navigation({"Coach": [coach, coachInbox, roombookingCoach]})
     pg.run()
 elif role == "student":
     student = st.Page("dashboards/student.py", title="Dashboard", icon=":material/school:")

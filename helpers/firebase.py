@@ -502,3 +502,100 @@ def leaveClass(id_token, className, uid):
                 return True
     
     return False
+
+def getRooms(id_token):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/rooms.json"
+        f"?auth={id_token}"
+    )
+
+    response = requests.get(url)
+
+    if response.ok:
+        return response.json() or {}
+
+    return None
+
+def getRoomBookings(id_token, date):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/rooms.json"
+        f"?auth={id_token}"
+    )
+
+    response = requests.get(url)
+
+    if response.ok:
+        rooms = response.json() or {}
+        bookings = {}
+        for roomName, roomData in rooms.items():
+            date_bookings = (roomData or {}).get(date) or {}
+            if "coach" in date_bookings:
+                date_bookings = [date_bookings]
+            else:
+                date_bookings = list(date_bookings.values())
+            bookings[roomName] = date_bookings
+        return bookings
+
+    return None
+
+def createRoom(id_token, roomName):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/rooms/{roomName}.json"
+        f"?auth={id_token}"
+    )
+
+    response = requests.put(url, json={"name":roomName})
+    if response.ok:
+        return True
+
+    response.raise_for_status()
+
+
+def bookRoom(id_token, roomName, date, startTime, endTime, coachName, className):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/rooms/{roomName}/{date}.json"
+        f"?auth={id_token}"
+    )
+
+    check_response = requests.get(url)
+    if not check_response.ok:
+        check_response.raise_for_status()
+    bookings = check_response.json() or {}
+    if "coach" in bookings:
+        return False
+
+    start = datetime.datetime.strptime(startTime, "%H:%M").time()
+    end = datetime.datetime.strptime(endTime, "%H:%M").time()
+    if start >= end:
+        return False
+
+    for booking in bookings.values():
+        existing_start = booking.get("start")
+        existing_end = booking.get("end")
+        if not existing_start or not existing_end:
+            return False
+        if startTime < existing_end and endTime > existing_start:
+            return False
+
+    payload = {
+        "start": startTime,
+        "end": endTime,
+        "coach": coachName,
+        "class": className
+    }
+    bookingKey = startTime.replace(":", "-")
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/rooms/{roomName}/{date}/{bookingKey}.json"
+        f"?auth={id_token}"
+    )
+    response = requests.put(url, json=payload)
+
+    if response.ok:
+        return True
+
+    response.raise_for_status()

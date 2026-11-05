@@ -518,6 +518,7 @@ if not st.session_state['class_view']:
         else "assets/inbox.png"
     )
     imageButtons("dashboards/coach/inbox.py", inbox_icon, 1646, 316)
+    imageButtons("dashboards/coach/roombooking.py", "assets/sroombooking.png", 1646, 465)
     with st.container(horizontal=True, vertical_alignment="bottom"):
         st.subheader("Your Classes", width="content")
         st.divider()

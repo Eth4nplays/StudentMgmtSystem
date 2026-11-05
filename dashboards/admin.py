@@ -13,3 +13,4 @@ with col2:
 
 imageButtons("dashboards/admin/announcements.py", "assets/announcements.png", 1646, 595)
 imageButtons("dashboards/admin/activities.py", "assets/activities.png", 1646, 595)
+imageButtons("dashboards/admin/roombooking.py", "assets/roombooking.png", 1646, 595)
