@@ -20,25 +20,26 @@ def accountbulkupload():
     st.download_button("Download CSV Template", data="name,email,password,role\nJohn Doe,john.doe@example.com,Abc123,student\nJane Smith,jane.smith@example.com,Abc123,coach", file_name="account_template.csv", mime="text/csv")
 
     accountbulkcsv = st.file_uploader("Upload CSV", type = "csv")
-    if accountbulkcsv is not None:
-        dataframe = pd.read_csv(accountbulkcsv)
+    if st.button("Upload", type='primary', icon=":material/upload:"):
+        if accountbulkcsv is not None:
+            dataframe = pd.read_csv(accountbulkcsv)
 
-        st.spinner("Uploading accounts...")
+            st.spinner("Uploading accounts...")
 
-        for i in range(len(dataframe)):
-            name = str(dataframe.iloc[i]["name"])
-            email = str(dataframe.iloc[i]["email"])
-            password = str(dataframe.iloc[i]["password"])
-            role = str(dataframe.iloc[i]["role"])
-            if name and email and password and role:
-                if role not in ["student", "coach"]:
-                    if role.lower() == "teacher":
-                        role = "coach"
-                    if role.lower() == "parent":
-                        role = "student"
-                newAccount = firebase.createAccount(email=email.strip(), password=password.strip())
-                firebase.setData(uid=newAccount["localId"], id_token=newAccount["idToken"], role=role.lower(), name=name, email=email.strip())
-        st.rerun()
+            for i in range(len(dataframe)):
+                name = str(dataframe.iloc[i]["name"])
+                email = str(dataframe.iloc[i]["email"])
+                password = str(dataframe.iloc[i]["password"])
+                role = str(dataframe.iloc[i]["role"])
+                if name and email and password and role:
+                    if role not in ["student", "coach"]:
+                        if role.lower() == "teacher":
+                            role = "coach"
+                        if role.lower() == "parent":
+                            role = "student"
+                    newAccount = firebase.createAccount(email=email.strip(), password=password.strip())
+                    firebase.setData(uid=newAccount["localId"], id_token=newAccount["idToken"], role=role.lower(), name=name, email=email.strip())
+            st.rerun()
         
 @st.dialog("QR Code")
 def showqr(selectUid, name):
