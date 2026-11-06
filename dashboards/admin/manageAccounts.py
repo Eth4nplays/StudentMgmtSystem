@@ -1,6 +1,9 @@
+import pandas as pd
+import qrcode
 import streamlit as st
 import helpers.firebase as firebase
 import helpers.cookies as cookies
+from io import BytesIO
 
 st.page_link("dashboards/admin.py", label="Back", icon=":material/arrow_back:")
 
@@ -12,12 +15,52 @@ else:
 def fetchAccounts():
     return firebase.getAccounts(id_token=userToken)
 
-@st.dialog("Upload Students csv")
-def studentbulkupload():
-    studentbulkcsv = st.file_uploader("Upload CSV", type = "csv")
-    if studentbulkcsv is not None:
-        dataframe = pd.read_csv(studentbulkcsv)
+@st.dialog("Upload Accounts csv")
+def accountbulkupload():
+    st.download_button("Download CSV Template", data="name,email,password,role\nJohn Doe,john.doe@example.com,Abc123,student\nJane Smith,jane.smith@example.com,Abc123,coach", file_name="account_template.csv", mime="text/csv")
 
+    accountbulkcsv = st.file_uploader("Upload CSV", type = "csv")
+    if accountbulkcsv is not None:
+        dataframe = pd.read_csv(accountbulkcsv)
+
+        st.spinner("Uploading accounts...")
+
+        for i in range(len(dataframe)):
+            name = str(dataframe.iloc[i]["name"])
+            email = str(dataframe.iloc[i]["email"])
+            password = str(dataframe.iloc[i]["password"])
+            role = str(dataframe.iloc[i]["role"])
+            if name and email and password and role:
+                if role not in ["student", "coach"]:
+                    if role.lower() == "teacher":
+                        role = "coach"
+                    if role.lower() == "parent":
+                        role = "student"
+                newAccount = firebase.createAccount(email=email.strip(), password=password.strip())
+                firebase.setData(uid=newAccount["localId"], id_token=newAccount["idToken"], role=role.lower(), name=name, email=email.strip())
+        st.rerun()
+        
+@st.dialog("QR Code")
+def showqr(selectUid, name):
+    st.write("You may print this QR code for students/coaches")
+    qrData = f"{selectUid} {name}"
+
+    qr_img = qrcode.make(qrData)
+    img = qr_img._img
+
+    st.image(img)
+
+    buf = BytesIO()
+    img.save(buf, format="JPEG")
+    byte_im = buf.getvalue()
+    
+
+    st.download_button(
+        label="Download QR Code",
+        data=byte_im,
+        file_name=f"{name}-QR.png",
+        mime="image/png"
+    )
 
 @st.dialog("Create account")
 def createAccount():
@@ -69,11 +112,13 @@ def accountCard(uid, account):
         with st.container(horizontal=True, vertical_alignment="center"):
             st.subheader(account["name"])
             st.write(account["email"])
-            action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Account","Reset Password"], key=f"menu{account["name"]}")
+            action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Account","Reset Password", "Show QR"], key=f"menu{account["name"]}")
             if action == "Delete Account":
                 deleteAccount(account["name"], uid)
             if action == "Reset Password":
                 resetAccountPassword(account["email"])
+            if action == "Show QR":
+                showqr(uid, account["name"])
         st.caption(uid)
 
 accounts = fetchAccounts()
@@ -83,8 +128,8 @@ st.title("Manage Accounts")
 with st.container(horizontal=True, vertical_alignment="center", width="content"):
     if st.button("Create", type='primary', icon=":material/add:"):
             createAccount()
-    if st.button("Upload", type='primary', icon=" :material/upload:"):
-            studentbulkupload()
+    if st.button("Upload", type='primary', icon=":material/upload:"):
+            accountbulkupload()
 
     if st.button("Refresh", type='secondary', icon=":material/refresh:"):
             accounts = fetchAccounts()
