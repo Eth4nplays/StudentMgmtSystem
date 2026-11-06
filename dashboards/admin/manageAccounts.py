@@ -12,6 +12,13 @@ else:
 def fetchAccounts():
     return firebase.getAccounts(id_token=userToken)
 
+@st.dialog("Upload Students csv")
+def studentbulkupload():
+    studentbulkcsv = st.file_uploader("Upload CSV", type = "csv")
+    if studentbulkcsv is not None:
+        dataframe = pd.read_csv(studentbulkcsv)
+
+
 @st.dialog("Create account")
 def createAccount():
     user_types = {
@@ -76,6 +83,8 @@ st.title("Manage Accounts")
 with st.container(horizontal=True, vertical_alignment="center", width="content"):
     if st.button("Create", type='primary', icon=":material/add:"):
             createAccount()
+    if st.button("Upload", type='primary', icon=" :material/upload:"):
+            studentbulkupload()
 
     if st.button("Refresh", type='secondary', icon=":material/refresh:"):
             accounts = fetchAccounts()
