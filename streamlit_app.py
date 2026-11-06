@@ -54,7 +54,12 @@ elif role == "coach":
     coach = st.Page("dashboards/coach.py", title="Dashboard", icon=":material/school:")
     coachInbox = st.Page("dashboards/coach/inbox.py", title="Inbox", icon=":material/inbox:")
     roombookingCoach = st.Page("dashboards/coach/roombooking.py", title="Room Booking", icon=":material/meeting_room:")
-    pg = st.navigation({"Coach": [coach, coachInbox, roombookingCoach]})
+    attendanceScanner = st.Page(
+        "dashboards/coach/attendancescan.py",
+        title="Attendance Scanner",
+        visibility="hidden",
+    )
+    pg = st.navigation({"Coach": [coach, coachInbox, roombookingCoach, attendanceScanner]})
     pg.run()
 elif role == "student":
     student = st.Page("dashboards/student.py", title="Dashboard", icon=":material/school:")

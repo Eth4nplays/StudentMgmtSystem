@@ -376,6 +376,8 @@ def classViewer():
 
 
     with attendance:
+        if st.button("Scan Attendance", type="primary", icon=":material/qr_code:"):
+            st.switch_page("dashboards/coach/attendancescan.py")
         date = st.date_input(
             "Select Date",
             value=datetime.date.today(),

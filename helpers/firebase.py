@@ -249,7 +249,7 @@ def editAttendance(id_token, className, field, value):
         f"?auth={id_token}"
     )
 
-    response = requests.put(url, json=value)
+    response = requests.patch(url, json=value)
 
     if response.ok:
         return response.json()
