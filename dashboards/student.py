@@ -10,6 +10,8 @@ import calendar
 from datetime import datetime
 import helpers.mongodb
 
+import qrcode
+
 if 'class_view' not in st.session_state:
     st.session_state['class_view'] = False
 
@@ -256,17 +258,16 @@ def classViewer():
                     "Month",
                     range(1, 13),
                     format_func=lambda m: calendar.month_name[m],
-                    index= datetime.now().month-1
+                    index=datetime.now().month - 1
                 )
 
                 year = st.selectbox(
                     "Year",
-                    range(2025, datetime.now().year+1),
-                    index= datetime.now().year-2025
+                    range(2025, datetime.now().year + 1),
+                    index=datetime.now().year - 2025
                 )
 
             with st.container(border=True):
-                # Build row for the chosen month
                 rows = []
                 num_days = calendar.monthrange(year, month)[1]
 
@@ -275,39 +276,82 @@ def classViewer():
 
                 for day in range(1, num_days + 1):
                     date_str = f"{day:02d}-{month:02d}-{year}"
-                    records = class_data["attendance"].get(date_str, {})
+                    records = (class_data.get("attendance") or {}).get(date_str) or {}
 
                     if name not in records:
                         continue
-                    else:
-                        total_days += 1
 
-                    attended = records.get(name, False)
+                    total_days += 1
+
+                    record = records[name]
+
+                    # Support old and new Firebase attendance formats
+                    if isinstance(record, dict):
+                        attended = record.get("0", False)
+                        remarks = record.get("1", "")
+
+                    elif isinstance(record, (list, tuple)):
+                        attended = record[0] if len(record) > 0 else False
+                        remarks = record[1] if len(record) > 1 else ""
+
+                    else:
+                        attended = record
+                        remarks = ""
+
+                    attended = attended if isinstance(attended, bool) else False
+                    remarks = str(remarks) if remarks is not None else ""
 
                     rows.append({
                         "Date": date_str,
-                        "Attendance": attended
+                        "Attendance": attended,
+                        "Remarks": remarks
                     })
 
                     if attended:
                         total_attendance += 1
 
                 # Convert to DataFrame
-                df = pd.DataFrame(rows)
+                df = pd.DataFrame(
+                    rows,
+                    columns=["Date", "Attendance", "Remarks"]
+                )
+
+                if not df.empty:
+                    df = df.astype({
+                        "Date": "str",
+                        "Attendance": "bool",
+                        "Remarks": "str"
+                    })
 
                 # Display table
-                st.dataframe(df, width="stretch", hide_index=True)
+                st.dataframe(
+                    df,
+                    width="stretch",
+                    hide_index=True,
+                    column_config={
+                        "Attendance": st.column_config.CheckboxColumn(
+                            "Attendance"
+                        ),
+                        "Remarks": st.column_config.TextColumn(
+                            "Remarks"
+                        )
+                    }
+                )
 
-            with st.container(horizontal=True):
-                with st.container(border=True):
-                    st.text("Class Attendance Rate")
-                    try:
-                        st.subheader(f"{round((total_attendance/total_days)*100, 1)}%")
-                    except:
-                        st.subheader(f"0%")
-                with st.container(border=True):
-                    st.text("Total Attendance")
-                    st.subheader(f"{total_attendance}/{total_days}")
+        with st.container(horizontal=True):
+            with st.container(border=True):
+                st.text("Class Attendance Rate")
+
+                attendance_rate = (
+                    round((total_attendance / total_days) * 100, 1)
+                    if total_days else 0
+                )
+
+                st.subheader(f"{attendance_rate}%")
+
+            with st.container(border=True):
+                st.text("Total Attendance")
+                st.subheader(f"{total_attendance}/{total_days}")
 
         with st.expander(":material/school: Academic Report"):
             grades = firebase.getClassReports(userToken, st.session_state["selected_class"])

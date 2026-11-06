@@ -376,35 +376,108 @@ def classViewer():
 
 
     with attendance:
-        date = st.date_input("Select Date", value=None, min_value=None, max_value=None, key="attendance_date", format="DD-MM-YYYY")
+        date = st.date_input(
+            "Select Date",
+            value=datetime.date.today(),
+            min_value=None,
+            max_value=datetime.date.today(),
+            key="attendance_date",
+            format="DD-MM-YYYY"
+        )
+
         if date:
+            date_str = date.strftime("%d-%m-%Y")
+
             try:
-                # if attendance data is available / if date is selected
-                with st.form("attendance_form", border=False):
-                    edited_df = st.data_editor(pd.DataFrame(
-                        class_data["attendance"][date.strftime("%d-%m-%Y")].items(),
-                        columns=["Student", "Attendance"]), hide_index=True, width="stretch", key=f"attendance_editor_{date.strftime("%d-%m-%Y")}")
-                    if st.form_submit_button("Submit"):
-                        payload = edited_df.set_index("Student").to_dict()["Attendance"]
-                        firebase.editAttendance(id_token=userToken, 
-                                                className=st.session_state['selected_class'], 
-                                                field=date.strftime("%d-%m-%Y"), 
-                                                value=payload)
-                        st.success("Attendance updated successfully!")
-            except:
-                try:
-                    # if date is selected, however attendance data is not available
-                    # initialize new attendance data with payload
+                attendance_data = class_data["attendance"][date_str]
+
+            except KeyError:
+                # Initialize attendance if the selected date does not exist
+                attendance_data = {}
+
+                for i in class_data["students"]:
+                    attendance_data[i.split()[1]] = {
+                        "0": False,
+                        "1": ""
+                    }
+
+                firebase.editAttendance(
+                    id_token=userToken,
+                    className=st.session_state["selected_class"],
+                    field=date_str,
+                    value=attendance_data
+                )
+
+                st.rerun()
+
+            # Convert different formats into a consistent dataframe
+            rows = []
+
+            for student, value in attendance_data.items():
+                if isinstance(value, dict):
+                    status = value.get("0", False)
+                    remarks = value.get("1", "")
+
+                elif isinstance(value, (list, tuple)):
+                    status = value[0] if len(value) > 0 else False
+                    remarks = value[1] if len(value) > 1 else ""
+
+                else:
+                    status = value
+                    remarks = ""
+
+                rows.append({
+                    "Student": student,
+                    "Attendance": status if isinstance(status, bool) else False,
+                    "Remarks": str(remarks) if remarks is not None else ""
+                })
+
+            df = pd.DataFrame(rows)
+
+            df = df.astype({
+                "Student": "str",
+                "Attendance": "bool",
+                "Remarks": "str"
+            })
+
+            with st.form("attendance_form", border=False):
+                edited_df = st.data_editor(
+                    df,
+                    hide_index=True,
+                    width="stretch",
+                    key=f"attendance_editor_{date_str}",
+                    column_config={
+                        "Student": st.column_config.TextColumn(
+                            "Student",
+                            disabled=True
+                        ),
+                        "Attendance": st.column_config.CheckboxColumn(
+                            "Attendance",
+                            required=True
+                        ),
+                        "Remarks": st.column_config.TextColumn(
+                            "Remarks"
+                        )
+                    }
+                )
+
+                if st.form_submit_button("Submit"):
                     payload = {}
-                    for i in class_data["students"]:
-                        payload[i.split()[1]] = False
-                    firebase.editAttendance(id_token=userToken, 
-                                            className=st.session_state['selected_class'], 
-                                            field=date.strftime("%d-%m-%Y"), 
-                                            value=payload)
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"An error has occured.{e}")
+
+                    for _, row in edited_df.iterrows():
+                        payload[row["Student"]] = {
+                            "0": bool(row["Attendance"]),
+                            "1": row["Remarks"]
+                        }
+
+                    firebase.editAttendance(
+                        id_token=userToken,
+                        className=st.session_state["selected_class"],
+                        field=date_str,
+                        value=payload
+                    )
+
+                    st.success("Attendance updated successfully!")
             
     with schedule:
         with st.container(horizontal=True, vertical_alignment="center"):
