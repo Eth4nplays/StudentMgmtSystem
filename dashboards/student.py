@@ -338,20 +338,20 @@ def classViewer():
                     }
                 )
 
-        with st.container(horizontal=True):
-            with st.container(border=True):
-                st.text("Class Attendance Rate")
+            with st.container(horizontal=True):
+                with st.container(border=True):
+                    st.text("Class Attendance Rate")
 
-                attendance_rate = (
-                    round((total_attendance / total_days) * 100, 1)
-                    if total_days else 0
-                )
+                    attendance_rate = (
+                        round((total_attendance / total_days) * 100, 1)
+                        if total_days else 0
+                    )
 
-                st.subheader(f"{attendance_rate}%")
+                    st.subheader(f"{attendance_rate}%")
 
-            with st.container(border=True):
-                st.text("Total Attendance")
-                st.subheader(f"{total_attendance}/{total_days}")
+                with st.container(border=True):
+                    st.text("Total Attendance")
+                    st.subheader(f"{total_attendance}/{total_days}")
 
         with st.expander(":material/school: Academic Report"):
             grades = firebase.getClassReports(userToken, st.session_state["selected_class"])
