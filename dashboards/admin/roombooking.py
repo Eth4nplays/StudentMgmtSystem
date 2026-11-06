@@ -36,7 +36,8 @@ bookingDate = st.date_input(
     "Select Date",
     value=datetime.date.today(),
     format="DD/MM/YYYY",
-    key="admin_room_booking_date"
+    key="admin_room_booking_date",
+    max_value=datetime.date.today()
 )
 dateKey = bookingDate.strftime("%Y-%m-%d")
 rooms = firebase.getRooms(userToken)
@@ -58,12 +59,9 @@ else:
                     for booking in roomBookings:
                         if booking.get("start") and booking.get("end"):
                             st.write(
-                                f"{booking['start']} - {booking['end']} · "
+                                f"**{booking['start']} - {booking['end']}** · "
                                 f"{booking.get('coach', 'Unknown coach')}"
+                                f" · {booking.get('class', 'Unknown class')}"
                             )
-                            st.caption(f"Class: {booking.get('class', 'Unknown class')}")
-                        else:
-                            st.write(f"Booked by: {booking.get('coach', 'Unknown coach')}")
-                            st.caption(f"Class: {booking.get('class', 'Unknown class')}")
                 else:
                     st.caption("No bookings")
