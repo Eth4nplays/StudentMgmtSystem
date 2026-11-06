@@ -1,6 +1,6 @@
 
 from io import StringIO
-
+from io import BytesIO
 import pandas as pd
 import streamlit as st
 import helpers.firebase as firebase
@@ -388,8 +388,19 @@ def classViewer():
             else:
                 st.error("Failed to retrieve class members.")
 
+@st.dialog("Your QR")
+def showqr():
+    qrData = f"{uid} {st.session_state['profile']['name']}"
+
+    qr_img = qrcode.make(qrData)
+    img = qr_img._img
+    st.write("You can use this QR code for attendance check-ins.")
+    st.image(img)
+
 if not st.session_state['class_view']:
-    st.title(f"Welcome, {st.session_state['profile']['name']}")
+    with st.container(horizontal=True, vertical_alignment="center"):
+        st.title(f"Welcome, {st.session_state['profile']['name']}")
+        st.button("My QR", type="secondary", icon=":material/qr_code:", on_click=showqr)
 
     inbox_icon = (
         "assets/inbox_unread.png"
