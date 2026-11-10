@@ -12,7 +12,7 @@ A web application for managing after-school activities with different user roles
    - Schedule
 - Room booking
 - Announcements & Inbox
-- Student, coach, and administrator dashboards in English, Simplified Chinese, and Malay; language preference is saved to each user's Firebase profile
+- Malay, Chinese and English Localizations
 
 # Setting up
 ## Requirements
