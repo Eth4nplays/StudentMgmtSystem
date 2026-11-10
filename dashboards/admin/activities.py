@@ -10,6 +10,10 @@ import random
 import pandas as pd
 from datetime import time
 import helpers.mongodb
+from helpers.localization import localized_month_name, normalize_language, translate
+
+language = normalize_language(st.session_state["profile"].get("language"))
+tr = lambda text: translate(text, language)
 
 if 'class_view' not in st.session_state:
     st.session_state['class_view'] = False
@@ -47,20 +51,20 @@ def classCard(i):
         with st.container(horizontal=True, vertical_alignment="center"):
             st.subheader(i[0], width="content")
 
-        if st.button("View Activities", key=f"view_{i[0]}"):
+        if st.button(tr("View Activities"), key=f"view_{i[0]}"):
             viewClass(i[0])
 
 
-@st.dialog("Submission")
+@st.dialog(tr("Submission"))
 def viewSubmission(class_data, student_name, submission, date):
     with st.container(border=True):
         if submission.startswith("fileUpload:"):
             file_id = submission.split("fileUpload:")[1]
-            with st.spinner("Loading submission..."):
+            with st.spinner(tr("Loading submission...")):
                 file_data = helpers.mongodb.download(file_id)
             st.markdown(f":material/attachment: {file_data['filename']}")
             st.download_button(
-                label="Download Submission",
+                label=tr("Download Submission"),
                 data=file_data["data"],
                 file_name=file_data["filename"],
                 mime=file_data["contentType"],
@@ -76,26 +80,27 @@ def viewSubmission(class_data, student_name, submission, date):
     except:
         currentGrade = "Ungraded"
     with st.container(border=True):
-        st.write(":material/grade: Grade: " + str(currentGrade) +" / " + str(class_data["totalGrade"]))
-        st.write(":material/comment: Coach Comment:")
-        st.markdown(class_data["submissions"][student_name].get("comment", "No comment yet."))
+        st.write(f":material/grade: {tr('Grade:')} {currentGrade} / {class_data['totalGrade']}")
+        st.write(f":material/comment: {tr('Coach Comment:')}")
+        st.markdown(class_data["submissions"][student_name].get("comment", tr("No comment yet.")))
 
 def activityViewer(date):
     class_data = firebase.getClass(userToken, st.session_state['selected_class'])["tasks"][date]
     if not st.session_state['editing_activity']:
-        if st.button("Back", type="tertiary", icon=":material/arrow_back:"):
+        if st.button(tr("Back"), type="tertiary", icon=":material/arrow_back:"):
             st.session_state.update({"activity_view": False})
             st.rerun()
         with st.container(horizontal=True):
                         st.header(class_data["title"])
-                        if st.button("Edit Activity", type="tertiary", icon=":material/edit:"):
+                        if st.button(tr("Edit Activity"), type="tertiary", icon=":material/edit:"):
                             st.session_state['editing_activity'] = True
                             st.rerun()
-        st.write(f"Due on **{datetime.datetime.strptime(class_data['deadline'], '%y %m %d %H %M').strftime('%d %B %Y, %I:%M %p')}** • Maximum Grade: **{class_data['totalGrade']}**")
+        deadline = datetime.datetime.strptime(class_data["deadline"], "%y %m %d %H %M")
+        st.write(f"{tr('Due on')} **{deadline.day:02d} {localized_month_name(deadline.month, language)} {deadline.year}, {deadline.strftime('%I:%M %p')}** • {tr('Maximum Grade')}: **{class_data['totalGrade']}**")
         with st.container(border=True):
             st.markdown(class_data["contents"])
         st.divider()
-        st.subheader("Submissions")
+        st.subheader(tr("Submissions"))
         try:
             for i in class_data["submissions"]:
                 student_name = i.split()[1]
@@ -105,23 +110,23 @@ def activityViewer(date):
                         try:
                             st.write(f"{class_data['submissions'][i]['grade']}/{class_data['totalGrade']}")
                         except:
-                            st.write(f"Ungraded")
-                    if st.button("View Submission", key=f"view_{student_name}"):
+                            st.write(tr("Ungraded"))
+                    if st.button(tr("View Submission"), key=f"view_{student_name}"):
                         viewSubmission(class_data, i, class_data['submissions'][i]['submission'], date)
         except Exception as e:
-            st.write(f"No submissions yet. {e}")
+            st.write(tr("No submissions yet."))
         
     else:
         
         with st.container(horizontal=True):
-            title= st.text_input("Activity Title", value=class_data["title"], key="edit_title")
+            title= st.text_input(tr("Activity Title"), value=class_data["title"], key="edit_title")
         with st.container(horizontal=True):
-            deadline_date = st.date_input("Deadline", format="DD/MM/YYYY", value=datetime.datetime.strptime(class_data['deadline'], '%y %m %d %H %M').date(), key="edit_deadline_date")
-            deadline_time = st.time_input("Time", value=datetime.datetime.strptime(class_data['deadline'], '%y %m %d %H %M').time(), key="edit_deadline_time")
-        max_total_grade = st.number_input("Max Total Grade", min_value=0, step=1, value=class_data["totalGrade"])
-        content = st.text_area("Activity Contents", value=class_data["contents"], key="edit_contents")
+            deadline_date = st.date_input(tr("Deadline"), format="DD/MM/YYYY", value=datetime.datetime.strptime(class_data['deadline'], '%y %m %d %H %M').date(), key="edit_deadline_date")
+            deadline_time = st.time_input(tr("Time"), value=datetime.datetime.strptime(class_data['deadline'], '%y %m %d %H %M').time(), key="edit_deadline_time")
+        max_total_grade = st.number_input(tr("Max Total Grade"), min_value=0, step=1, value=class_data["totalGrade"])
+        content = st.text_area(tr("Activity Contents"), value=class_data["contents"], key="edit_contents")
 
-        if st.button("Save and Exit", type="primary", icon=":material/arrow_back:"):
+        if st.button(tr("Save and Exit"), type="primary", icon=":material/arrow_back:"):
             st.session_state.update({"editing_activity": False})
             firebase.editTask(userToken , className=st.session_state['selected_class'], date=date, taskName=title, contents=content, totalGrade=max_total_grade, deadline=(deadline_date.strftime("%y %m %d") + " " + deadline_time.strftime("%H %M")))
 
@@ -129,7 +134,7 @@ def activityViewer(date):
 
 def classViewer():
 
-    if st.button("Back", type="tertiary", icon=":material/arrow_back:"):
+    if st.button(tr("Back"), type="tertiary", icon=":material/arrow_back:"):
         st.session_state.update({"class_view": False})
         st.rerun()
 
@@ -141,15 +146,15 @@ def classViewer():
             with st.container(horizontal=True, vertical_alignment="center", border=True):
                 with st.container():
                     st.write(class_data["tasks"][i]["title"])
-                    if st.button("View Activity", key=f"view_{class_data['tasks'][i]}"):
+                    if st.button(tr("View Activity"), key=f"view_{class_data['tasks'][i]}"):
                         viewActivity(i)
     except Exception as e:
-        st.write("No activities found.")
+        st.write(f"{tr('No activities found.')} {e}")
 
 if not st.session_state['class_view']:
-    st.page_link("dashboards/admin.py", label="Back", icon=":material/arrow_back:")
+    st.page_link("dashboards/admin.py", label=tr("Back"), icon=":material/arrow_back:")
 
-    st.title(f"Activities")
+    st.title(tr("Activities"))
             
     list_of_classes = firebase.getClasses(userToken)
     for i in list_of_classes.items():

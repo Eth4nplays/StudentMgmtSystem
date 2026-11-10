@@ -3,6 +3,10 @@ import streamlit as st
 
 import helpers.cookies as cookies
 import helpers.firebase as firebase
+from helpers.localization import normalize_language, translate
+
+language = normalize_language(st.session_state["profile"].get("language"))
+tr = lambda text: translate(text, language)
 
 if cookies.getCookies("token") is not None:
     userToken = cookies.getCookies("token")
@@ -31,29 +35,29 @@ def show_attendance_report(class_data):
         ]
         present = sum(bool(record) for record in records)
         student_rows.append({
-            "Student": name,
-            "Days Attended": present,
-            "Days Recorded": len(records),
-            "Attendance Rate": f"{present / len(records) * 100:.1f}%" if records else "—",
+            tr("Student"): name,
+            tr("Days Attended"): present,
+            tr("Days Recorded"): len(records),
+            tr("Attendance Rate"): f"{present / len(records) * 100:.1f}%" if records else "—",
         })
 
     for date, day_records in attendance.items():
         day_records = day_records or {}
         present = sum(bool(attended) for attended in day_records.values())
-        attendance_by_date.append({"Date": date, "Students Present": present})
+        attendance_by_date.append({tr("Date"): date, tr("Students Present"): present})
         total_present += present
         total_records += len(day_records)
 
     if not attendance_by_date:
-        st.info("No attendance data recorded for this class yet.")
+        st.info(tr("No attendance data recorded for this class yet."))
         return
 
     #make a bar chart of attendance by date with border
-    st.bar_chart(pd.DataFrame(attendance_by_date), x="Date", y="Students Present")
+    st.bar_chart(pd.DataFrame(attendance_by_date), x=tr("Date"), y=tr("Students Present"))
     attendance_rate = total_present / total_records * 100 if total_records else 0
     rate_column, records_column = st.columns(2)
-    rate_column.metric("Class Attendance Rate", f"{attendance_rate:.1f}%")
-    records_column.metric("Attendance Records", f"{total_present}/{total_records} present")
+    rate_column.metric(tr("Class Attendance Rate"), f"{attendance_rate:.1f}%")
+    records_column.metric(tr("Attendance Records"), f"{total_present}/{total_records} {tr('present')}")
     if student_rows:
         st.dataframe(pd.DataFrame(student_rows), width="stretch", hide_index=True)
 
@@ -61,11 +65,11 @@ def show_attendance_report(class_data):
 def show_academic_report(class_name, class_data):
     reports = firebase.getClassReports(userToken, class_name)
     if reports is None:
-        st.error("Failed to retrieve assignment reports.")
+        st.error(tr("Failed to retrieve assignment reports."))
         return
 
     if not reports:
-        st.info("No students or assignments found in this class.")
+        st.info(tr("No students or assignments found in this class."))
         return
 
     tasks = class_data.get("tasks") or {}
@@ -73,7 +77,7 @@ def show_academic_report(class_name, class_data):
         with st.expander(display_name(student)):
             student_reports = reports[student]
             if not student_reports:
-                st.info("No assignments found for this student.")
+                st.info(tr("No assignments found for this student."))
                 continue
 
             rows = []
@@ -82,31 +86,31 @@ def show_academic_report(class_name, class_data):
                 submission = (task.get("submissions") or {}).get(student) or {}
                 grade = report.get("grade")
                 if grade == "Not submitted":
-                    grade_text = "Not submitted"
-                    submission_status = "Not submitted"
+                    grade_text = tr("Not submitted")
+                    submission_status = tr("Not submitted")
                 elif grade is None:
-                    grade_text = "Not graded"
-                    submission_status = "Submitted"
+                    grade_text = tr("Not graded")
+                    submission_status = tr("Submitted")
                 else:
                     grade_text = f"{grade} / {report.get('totalGrade', '—')}"
-                    submission_status = "Submitted"
+                    submission_status = tr("Submitted")
 
                 rows.append({
-                    "Assignment": report.get("title", task_id),
-                    "Grade": grade_text,
-                    "Submission": submission_status,
-                    "Coach Feedback": submission.get("comment") or "—",
+                    tr("Assignment"): report.get("title", task_id),
+                    tr("Grade"): grade_text,
+                    tr("Submission"): submission_status,
+                    tr("Coach Feedback"): submission.get("comment") or "—",
                 })
 
             st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
 
 
-st.page_link("dashboards/admin.py", label="Back", icon=":material/arrow_back:")
-st.title("Reports")
+st.page_link("dashboards/admin.py", label=tr("Back"), icon=":material/arrow_back:")
+st.title(tr("Reports"))
 
 classes = firebase.getClasses(userToken)
 if classes is None:
-    st.error("Failed to retrieve classes.")
+    st.error(tr("Failed to retrieve classes."))
 else:
     accounts = firebase.getAccounts(userToken) or {}
     classes_by_coach = {}
@@ -116,11 +120,11 @@ else:
         classes_by_coach.setdefault(owner_id, []).append((class_name, class_data))
 
     if not classes_by_coach:
-        st.info("No class reports are available yet.")
+        st.info(tr("No class reports are available yet."))
     else:
         def coach_label(owner_id):
             if owner_id is None:
-                return "Unassigned coach"
+                return tr("Unassigned coach")
             coach = accounts.get(owner_id) or {}
             return coach.get("name") or f"Coach ({owner_id})"
 
@@ -135,7 +139,7 @@ else:
                 ):
                     with st.expander(class_name):
                         attendance_tab, academic_tab = st.tabs(
-                            [":material/assignment: Attendance", ":material/school: Academic"]
+                            [f":material/assignment: {tr('Attendance')}", f":material/school: {tr('Academic')}"]
                         )
                         with attendance_tab:
                             show_attendance_report(class_data)

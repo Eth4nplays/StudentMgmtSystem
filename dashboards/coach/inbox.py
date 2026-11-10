@@ -2,9 +2,13 @@ import streamlit as st
 import helpers.firebase as firebase
 import helpers.cookies as cookies
 import datetime
+from helpers.localization import localized_month_name, normalize_language, translate
 
-st.page_link("dashboards/coach.py", label="Back", icon=":material/arrow_back:")
-st.title("Inbox")
+language = normalize_language(st.session_state["profile"].get("language"))
+tr = lambda text: translate(text, language)
+
+st.page_link("dashboards/coach.py", label=tr("Back"), icon=":material/arrow_back:")
+st.title(tr("Inbox"))
 
 if cookies.getCookies("token") != None:
         userToken = cookies.getCookies("token")
@@ -24,13 +28,17 @@ def announcementCard(title, contents, unread):
         with st.container(horizontal=True, vertical_alignment="center"):
             st.subheader(contents["title"])
             if unread:
-                st.badge("Unread", color="red")
+                st.badge(tr("Unread"), color="red")
         st.markdown(contents["content"])
-        st.caption(datetime.datetime.strptime(title, "%y %m %d %H %M").strftime("%d %B %Y, %I:%M %p"))
+        posted_at = datetime.datetime.strptime(title, "%y %m %d %H %M")
+        st.caption(
+            f"{posted_at.day:02d} {localized_month_name(posted_at.month, language)} "
+            f"{posted_at.year}, {posted_at.strftime('%I:%M %p')}"
+        )
 
 with st.container(horizontal=True, vertical_alignment="center", width="content"):
 
-    refresh_clicked = st.button("Refresh", type='secondary', icon=":material/refresh:")
+    refresh_clicked = st.button(tr("Refresh"), type='secondary', icon=":material/refresh:")
 
     available_announcements = {
         date: contents
@@ -45,7 +53,7 @@ with st.container(horizontal=True, vertical_alignment="center", width="content")
     )
 
     if st.button(
-        "Mark all as read",
+        tr("Mark all as read"),
         type="secondary",
         icon=":material/done_all:",
         disabled=latest_announcement is None
@@ -56,7 +64,7 @@ with st.container(horizontal=True, vertical_alignment="center", width="content")
             st.session_state["has_unread_announcement"] = False
             st.rerun()
         else:
-            st.error("Failed to mark announcements as read.")
+            st.error(tr("Failed to mark announcements as read."))
 
 last_read = (
     st.session_state['profile'].get("lastreadannouncement")
@@ -88,4 +96,4 @@ if available_announcements:
         is_unread = last_read_datetime is None or announcement_datetime > last_read_datetime
         announcementCard(date, contents, is_unread)
 else:
-     st.write("No announcements available.")
+     st.write(tr("No announcements available."))

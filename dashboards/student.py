@@ -11,6 +11,15 @@ from datetime import datetime
 import helpers.mongodb
 
 import qrcode
+from helpers.localization import (
+    localized_asset_path,
+    localized_month_name,
+    normalize_language,
+    translate,
+)
+
+language = normalize_language(st.session_state["profile"].get("language"))
+tr = lambda text: translate(text, language)
 
 if 'class_view' not in st.session_state:
     st.session_state['class_view'] = False
@@ -59,19 +68,19 @@ def hasUnreadAnnouncement():
 if "has_unread_announcement" not in st.session_state:
     st.session_state["has_unread_announcement"] = hasUnreadAnnouncement()
 
-@st.dialog("Join Class")
+@st.dialog(tr("Join Class"))
 def joinClass():
-    classCode = st.text_input("Enter Class Code")
-    if st.button("Join Class"):
+    classCode = st.text_input(tr("Enter Class Code"))
+    if st.button(tr("Join Class")):
         if classCode:
             result = firebase.joinClass(userToken, classCode.upper(), uid)
             if result:
-                st.success("Successfully joined the class!")
+                st.success(tr("Successfully joined the class!"))
                 st.rerun()
             else:
-                st.error("Failed to join the class. Please check the code and try again.")
+                st.error(tr("Failed to join the class. Please check the code and try again."))
         else:
-            st.warning("Please enter a class code.")
+            st.warning(tr("Please enter a class code."))
 
 
 def viewClass(className):
@@ -86,11 +95,11 @@ def classCard(i):
         with st.container(border=True):
             with st.container(horizontal=True, vertical_alignment="center"):
                 st.subheader(class_name)
-                if st.button("View Class", key=f"view_{i[0]}"):
+                if st.button(tr("View Class"), key=f"view_{i[0]}"):
                     viewClass(i[0])
-                action = st.menu_button("", type="tertiary", icon=":material/more_vert:", options=["Leave Class"], key=f"menu{class_name}")
+                action = st.menu_button("", type="tertiary", icon=":material/more_vert:", options=[tr("Leave Class")], key=f"menu{class_name}")
                 
-                if action == "Leave Class":
+                if action == tr("Leave Class"):
                     firebase.leaveClass(userToken, class_name, uid)
                     st.rerun()
 
@@ -99,85 +108,92 @@ def viewActivity(date):
     st.session_state.update({"activityDate": date})
     st.rerun()
 
-@st.dialog("Edit Submission")
+@st.dialog(tr("Edit Submission"))
 def editSubmission(date, submission):
-    submission = st.text_area("Submission", placeholder="Enter your submission here...", value=submission)
-    if st.button("Submit"):
+    submission = st.text_area(tr("Submission"), placeholder=tr("Enter your submission here..."), value=submission)
+    if st.button(tr("Submit")):
         if submission:
             if firebase.submitTask(userToken, f"{uid} {st.session_state['profile']['name']}", st.session_state['selected_class'], date, submission):
                 st.rerun()
             else:
-                st.warning("Apologies, but it seems that the submission deadline has passed.")
+                st.warning(tr("Apologies, but it seems that the submission deadline has passed."))
         else:
-            st.warning("Please enter your submission before submitting.")
+            st.warning(tr("Please enter your submission before submitting."))
 
-@st.dialog("Undo Submission")
+
+@st.dialog(tr("Undo Submission"))
 def undoSubmission(date, file, fileId=None):
-    st.write("Are you sure you want to undo your submission? This action cannot be undone.")
+    st.write(tr("Are you sure you want to undo your submission? This action cannot be undone."))
     with st.container(horizontal=True):
-        if st.button("Yes"):
+        if st.button(tr("Yes")):
             if firebase.unsubmitTask(userToken, f"{uid} {st.session_state['profile']['name']}", st.session_state['selected_class'], date):
                 if file:
-                    with st.spinner("Deleting file..."):
+                    with st.spinner(tr("Deleting file...")):
                         helpers.mongodb.delete(fileId)
                 st.rerun()
             else:
-                st.warning("Apologies, but it seems that the submission deadline has passed.")
-        if st.button("No", type="primary"):
+                st.warning(tr("Apologies, but it seems that the submission deadline has passed."))
+        if st.button(tr("No"), type="primary"):
             st.rerun()
 
 
 def activityViewer(date):
     class_data = firebase.getClass(userToken, st.session_state['selected_class'])["tasks"][date]
-    if st.button("Back", type="tertiary", icon=":material/arrow_back:"):
+    if st.button(tr("Back"), type="tertiary", icon=":material/arrow_back:"):
         st.session_state.update({"activity_view": False})
         st.rerun()
     with st.container(horizontal=True):
                     st.header(class_data["title"])
-    st.write(f"Due on **{datetime.strptime(class_data['deadline'], '%y %m %d %H %M').strftime('%d %B %Y, %I:%M %p')}** • Maximum Grade: **{class_data['totalGrade']}**")
+    deadline = datetime.strptime(class_data["deadline"], "%y %m %d %H %M")
+    st.write(
+        f"{tr('Due on')} **{deadline.day:02d} "
+        f"{localized_month_name(deadline.month, language)} {deadline.year}, "
+        f"{deadline.strftime('%I:%M %p')}** • {tr('Maximum Grade')}: "
+        f"**{class_data['totalGrade']}**"
+    )
     with st.container(border=True):
         st.markdown(class_data["contents"])
     st.divider()
     submissions = class_data.get("submissions", {}).get(f"{uid} {st.session_state['profile']['name']}")
-    st.subheader("Your Submission")
+    st.subheader(tr("Your Submission"))
     if submissions == None:
-        text, file = st.tabs([":material/description: Text Submission", ":material/attachment: File Submission"])
+        text, file = st.tabs([f":material/description: {tr('Text Submission')}", f":material/attachment: {tr('File Submission')}"])
         with text:
-            submission = st.text_area("Submission", placeholder="Enter your submission here...")
-            if st.button("Submit"):
+            submission = st.text_area(tr("Submission"), placeholder=tr("Enter your submission here..."))
+            if st.button(tr("Submit")):
                 if submission:
                     if firebase.submitTask(userToken, f"{uid} {st.session_state['profile']['name']}", st.session_state['selected_class'], date, submission):
-                        st.success("Submission successful!")
+                        st.success(tr("Submission successful!"))
                         st.rerun()
                     else:
-                        st.warning("Apologies, but it seems that the submission deadline has passed.")
+                        st.warning(tr("Apologies, but it seems that the submission deadline has passed."))
                 else:
-                    st.warning("Please enter your submission before submitting.")
+                    st.warning(tr("Please enter your submission before submitting."))
         with file:
-            uploaded_file = st.file_uploader("Upload your submission file", type=["pdf", "docx", "pptx", "xlsx", "txt", "png", "jpg", "jpeg"], accept_multiple_files=False)
-            if st.button("Submit File"):
+            uploaded_file = st.file_uploader(tr("Upload your submission file"), type=["pdf", "docx", "pptx", "xlsx", "txt", "png", "jpg", "jpeg"], accept_multiple_files=False)
+            if st.button(tr("Submit File")):
                 if uploaded_file:
-                    with st.spinner("Uploading file..."):
+                    with st.spinner(tr("Uploading file...")):
                         file_id = helpers.mongodb.upload(uploaded_file, filename=uploaded_file.name, contentType=uploaded_file.type)
                     # append fileUpload: to the file_id to indicate that this is a file submission
                     if firebase.submitTask(userToken, f"{uid} {st.session_state['profile']['name']}", st.session_state['selected_class'], date, f"fileUpload:{file_id}"):
                         st.rerun()
                     else:
-                        st.warning("Apologies, but it seems that the submission deadline has passed.")
+                        st.warning(tr("Apologies, but it seems that the submission deadline has passed."))
                 else:
-                    st.warning("Please upload a file before submitting.")
+                    st.warning(tr("Please upload a file before submitting."))
     else:
         with st.container(border=True):
             # if the submission is a file upload
             if submissions["submission"].startswith("fileUpload:"):
                 file_id = submissions["submission"].split("fileUpload:")[1]
                 with st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center"):
-                    st.write(f"**Grade:** {str(submissions.get("grade", "Not graded yet"))} / {str(class_data["totalGrade"])}")
-                    st.button("Undo Submission", type="tertiary", key="undo_submission", on_click=undoSubmission, args=(date,True, file_id), icon=":material/undo:")
-                with st.spinner("Loading submission..."):
+                    st.write(f"**{tr('Grade:')}** {str(submissions.get("grade", tr('Not graded yet')))} / {str(class_data['totalGrade'])}")
+                    st.button(tr("Undo Submission"), type="tertiary", key="undo_submission", on_click=undoSubmission, args=(date,True, file_id), icon=":material/undo:")
+                with st.spinner(tr("Loading submission...")):
                     file_data = helpers.mongodb.download(file_id)
                     st.download_button(
-                        label="Download your submission",
+                        label=tr("Download your submission"),
                         data=file_data["data"],
                         file_name=file_data["filename"],
                         mime=file_data["contentType"],
@@ -188,21 +204,24 @@ def activityViewer(date):
             # if the submission is a text submission
             else:
                 with st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center"):
-                    st.write(f"**Grade:** {str(submissions.get("grade", "Not graded yet"))} / {str(class_data["totalGrade"])}")
-                    st.button("Edit Submission", type="tertiary", key="edit_submission", on_click=editSubmission, args=(date,submissions["submission"]), icon=":material/edit:")
-                    st.button("Undo Submission", type="tertiary", key="undo_submission", on_click=undoSubmission, args=(date,False), icon=":material/undo:")
+                    st.write(f"**{tr('Grade:')}** {str(submissions.get("grade", tr('Not graded yet')))} / {str(class_data['totalGrade'])}")
+                    st.button(tr("Edit Submission"), type="tertiary", key="edit_submission", on_click=editSubmission, args=(date,submissions["submission"]), icon=":material/edit:")
+                    st.button(tr("Undo Submission"), type="tertiary", key="undo_submission", on_click=undoSubmission, args=(date,False), icon=":material/undo:")
                         
                     st.markdown(submissions["submission"])
-        st.markdown(f''':material/comment: **Coach comment:** {submissions.get("comment", "No comment yet")}''')
+        st.markdown(f''':material/comment: **{tr("Coach comment:")}** {submissions.get("comment", tr("No comment yet"))}''')
 
 def classViewer():
-    if st.button("Back", type="tertiary", icon=":material/arrow_back:"):
+    if st.button(tr("Back"), type="tertiary", icon=":material/arrow_back:"):
         st.session_state.update({"class_view": False})
         st.rerun()
 
     st.header(st.session_state['selected_class'])
 
-    activities, reports, schedule, people = st.tabs(["Activities", "Reports", "Schedule", "People"], on_change="rerun")
+    activities, reports, schedule, people = st.tabs(
+        [tr("Activities"), tr("Reports"), tr("Schedule"), tr("People")],
+        on_change="rerun",
+    )
 
     class_data = firebase.getClass(userToken, st.session_state['selected_class'])
 
@@ -213,11 +232,11 @@ def classViewer():
                         with st.container(horizontal=True, vertical_alignment="center", border=True):
                             with st.container():
                                 st.write(class_data["tasks"][i]["title"])
-                                if st.button("View Activity", key=f"view_{class_data['tasks'][i]}"):
+                                if st.button(tr("View Activity"), key=f"view_{class_data['tasks'][i]}"):
                                     viewActivity(i)
 
                 except Exception as e: 
-                    st.write("No activities found.")
+                    st.write(tr("No activities found."))
         
 
     with schedule:
@@ -225,44 +244,44 @@ def classViewer():
             df = pd.read_csv(
                 StringIO(class_data["classSchedule"].replace("\\n", "\n")),
                 header=None,
-                names=["Day", "Start Time", "End Time", "Activity"],
+                names=[tr("Day"), tr("Start Time"), tr("End Time"), tr("Activity")],
                 skipinitialspace=True
             )
     
             st.dataframe(df, hide_index=True, width="stretch",             
                             column_config={
-                                "Day": st.column_config.TextColumn(
-                                    "Day",
+                                tr("Day"): st.column_config.TextColumn(
+                                    tr("Day"),
                                 ),
-                                "Start Time": st.column_config.TimeColumn(
-                                    "Start Time",
+                                tr("Start Time"): st.column_config.TimeColumn(
+                                    tr("Start Time"),
                                     format="hh:mm A",
                                 ),
-                                "End Time": st.column_config.TimeColumn(
-                                    "End Time",
+                                tr("End Time"): st.column_config.TimeColumn(
+                                    tr("End Time"),
                                     format="hh:mm A",
                                 ),
-                                "Activity": st.column_config.TextColumn("Activity")
+                                tr("Activity"): st.column_config.TextColumn(tr("Activity"))
                             }
                         )
         else:
-            st.error("Failed to retrieve class schedule.")
+            st.error(tr("Failed to retrieve class schedule."))
 
     with reports:
-        with st.expander(":material/assignment: Attendance Report"):
+        with st.expander(f":material/assignment: {tr('Attendance Report')}"):
 
             name = st.session_state['profile']['name']
 
             with st.container(horizontal=True):
                 month = st.selectbox(
-                    "Month",
+                    tr("Month"),
                     range(1, 13),
-                    format_func=lambda m: calendar.month_name[m],
+                    format_func=lambda month: localized_month_name(month, language),
                     index=datetime.now().month - 1
                 )
 
                 year = st.selectbox(
-                    "Year",
+                    tr("Year"),
                     range(2025, datetime.now().year + 1),
                     index=datetime.now().year - 2025
                 )
@@ -302,9 +321,9 @@ def classViewer():
                     remarks = str(remarks) if remarks is not None else ""
 
                     rows.append({
-                        "Date": date_str,
-                        "Attendance": attended,
-                        "Remarks": remarks
+                        tr("Date"): date_str,
+                        tr("Attendance"): attended,
+                        tr("Remarks"): remarks
                     })
 
                     if attended:
@@ -313,14 +332,14 @@ def classViewer():
                 # Convert to DataFrame
                 df = pd.DataFrame(
                     rows,
-                    columns=["Date", "Attendance", "Remarks"]
+                    columns=[tr("Date"), tr("Attendance"), tr("Remarks")]
                 )
 
                 if not df.empty:
                     df = df.astype({
-                        "Date": "str",
-                        "Attendance": "bool",
-                        "Remarks": "str"
+                        tr("Date"): "str",
+                        tr("Attendance"): "bool",
+                        tr("Remarks"): "str"
                     })
 
                 # Display table
@@ -329,18 +348,18 @@ def classViewer():
                     width="stretch",
                     hide_index=True,
                     column_config={
-                        "Attendance": st.column_config.CheckboxColumn(
-                            "Attendance"
+                        tr("Attendance"): st.column_config.CheckboxColumn(
+                            tr("Attendance")
                         ),
-                        "Remarks": st.column_config.TextColumn(
-                            "Remarks"
+                        tr("Remarks"): st.column_config.TextColumn(
+                            tr("Remarks")
                         )
                     }
                 )
 
             with st.container(horizontal=True):
                 with st.container(border=True):
-                    st.text("Class Attendance Rate")
+                    st.text(tr("Class Attendance Rate"))
 
                     attendance_rate = (
                         round((total_attendance / total_days) * 100, 1)
@@ -350,24 +369,24 @@ def classViewer():
                     st.subheader(f"{attendance_rate}%")
 
                 with st.container(border=True):
-                    st.text("Total Attendance")
+                    st.text(tr("Total Attendance"))
                     st.subheader(f"{total_attendance}/{total_days}")
 
-        with st.expander(":material/school: Academic Report"):
+        with st.expander(f":material/school: {tr('Academic Report')}"):
             grades = firebase.getClassReports(userToken, st.session_state["selected_class"])
             if grades is None:
-                st.error("Failed to retrieve assignment reports.")
+                st.error(tr("Failed to retrieve assignment reports."))
             else:
                 student_name = f"{uid} {st.session_state['profile']['name']}"
                 student_grades = grades.get(student_name, {})
                 if not student_grades:
-                    st.info("No assignments found in this class.")
+                    st.info(tr("No assignments found in this class."))
                 else:
                     activity_grades = [
                         {
-                            "Activity": report["title"],
-                            "Grade": "Not graded" if report["grade"] is None else report["grade"],
-                            "Maximum Grade": report["totalGrade"],
+                            tr("Activity"): report["title"],
+                            tr("Grade"): tr("Not graded") if report["grade"] is None else report["grade"],
+                            tr("Maximum Grade"): report["totalGrade"],
                         }
                         for report in student_grades.values()
                     ]
@@ -378,46 +397,46 @@ def classViewer():
         with people:
             
             if class_data:
-                st.subheader("Coach")
+                st.subheader(tr("Coach"))
                 with st.container(horizontal=True, vertical_alignment="center", border=True):
                     st.write(firebase.getData(class_data["classOwner"], userToken)["name"])
-                st.subheader("Students")
+                st.subheader(tr("Students"))
                 for i in class_data["students"]:
                     with st.container(horizontal=True, vertical_alignment="center", border=True):
                         st.write(i.split()[1])
             else:
-                st.error("Failed to retrieve class members.")
+                st.error(tr("Failed to retrieve class members."))
 
-@st.dialog("Your QR")
+@st.dialog(tr("Your QR"))
 def showqr():
     qrData = f"{uid} {st.session_state['profile']['name']}"
 
     qr_img = qrcode.make(qrData)
     img = qr_img._img
-    st.write("You can use this QR code for attendance check-ins.")
+    st.write(tr("You can use this QR code for attendance check-ins."))
     st.image(img)
 
 if not st.session_state['class_view']:
     with st.container(horizontal=True, vertical_alignment="center"):
-        st.title(f"Welcome, {st.session_state['profile']['name']}")
-        st.button("My QR", type="secondary", icon=":material/qr_code:", on_click=showqr)
+        st.title(f"{tr('Welcome')}, {st.session_state['profile']['name']}")
+        st.button(tr("My QR"), type="secondary", icon=":material/qr_code:", on_click=showqr)
 
     inbox_icon = (
-        "assets/inbox_unread.png"
+        localized_asset_path("inbox_unread.png", language)
         if st.session_state["has_unread_announcement"]
-        else "assets/inbox.png"
+        else localized_asset_path("inbox.png", language)
     )
     imageButtons("dashboards/student/inbox.py", inbox_icon, 1646, 316)
 
     with st.container(horizontal=True, vertical_alignment="bottom"):
-        st.subheader("Your Classes", width="content")
+        st.subheader(tr("Your Classes"), width="content")
         st.divider()
     
     list_of_classes = firebase.getClasses(userToken)
     for i in list_of_classes.items():
         classCard(i)
 
-    if st.button("Join Class", width="stretch", icon=":material/add:", type="primary"):
+    if st.button(tr("Join Class"), width="stretch", icon=":material/add:", type="primary"):
         joinClass()
 
 else:

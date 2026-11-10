@@ -2,9 +2,13 @@ import streamlit as st
 from io import StringIO
 import pandas as pd
 from helpers import cookies, firebase
+from helpers.localization import normalize_language, translate
 
-st.page_link("dashboards/admin.py", label="Back", icon=":material/arrow_back:")
-st.title("Schedules")
+language = normalize_language(st.session_state["profile"].get("language"))
+tr = lambda text: translate(text, language)
+
+st.page_link("dashboards/admin.py", label=tr("Back"), icon=":material/arrow_back:")
+st.title(tr("Schedules"))
 if cookies.getCookies("token") != None:
         userToken = cookies.getCookies("token")
 else:
@@ -14,8 +18,8 @@ def classCard(class_name, class_data, coach_name):
     with st.container(border=True):
         with st.container(horizontal=True, vertical_alignment="center"):
             st.subheader(class_name, width="content")
-            st.caption(f"Coach: {coach_name}")
-            if st.button("Edit", type="secondary", icon=":material/edit:", key=f"editSchedule{class_name}"):
+            st.caption(f"{tr('Coach')}: {coach_name}")
+            if st.button(tr("Edit"), type="secondary", icon=":material/edit:", key=f"editSchedule{class_name}"):
                 editSchedule(class_data, class_name)
         if class_data:
             df = pd.read_csv(
@@ -28,25 +32,25 @@ def classCard(class_name, class_data, coach_name):
             st.dataframe(df, hide_index=True, width="stretch",             
                             column_config={
                                 "Day": st.column_config.TextColumn(
-                                    "Day",
+                                    tr("Day"),
                                 ),
                                 "Start Time": st.column_config.TimeColumn(
-                                    "Start Time",
+                                    tr("Start Time"),
                                     format="hh:mm A",
                                 ),
                                 "End Time": st.column_config.TimeColumn(
-                                    "End Time",
+                                    tr("End Time"),
                                     format="hh:mm A",
                                 ),
-                                "Activity": st.column_config.TextColumn("Activity")
+                                "Activity": st.column_config.TextColumn(tr("Activity"))
                             }
                         )
         else:
-            st.error("Failed to retrieve class schedule.")
+            st.error(tr("Failed to retrieve class schedule."))
 
                 
 
-@st.dialog("Edit Schedule")
+@st.dialog(tr("Edit Schedule"))
 def editSchedule(class_data, selected_class):
 
     df = pd.read_csv(
@@ -66,7 +70,7 @@ def editSchedule(class_data, selected_class):
         num_rows="dynamic",
         column_config={
             "Day": st.column_config.SelectboxColumn(
-                "Day",
+                tr("Day"),
                 options=[
                     "Monday",
                     "Tuesday",
@@ -79,20 +83,20 @@ def editSchedule(class_data, selected_class):
                 required=True
             ),
             "Start Time": st.column_config.TimeColumn(
-                "Start Time",
+                tr("Start Time"),
                 format="hh:mm A",
                 required=True
             ),
             "End Time": st.column_config.TimeColumn(
-                "End Time",
+                tr("End Time"),
                 format="hh:mm A",
                 required=True
             ),
-            "Activity": st.column_config.TextColumn("Activity")
+            "Activity": st.column_config.TextColumn(tr("Activity"))
         }
     )
 
-    if st.button("Submit"):
+    if st.button(tr("Submit")):
         newSchedule = edited.to_csv(
             index=False,
             header=False
@@ -104,20 +108,20 @@ def editSchedule(class_data, selected_class):
             newSchedule
         )
         if result:
-            st.success("Schedule updated successfully!")
+            st.success(tr("Schedule updated successfully!"))
             st.rerun()
         else:
-            st.error("Failed to update schedule.")
+            st.error(tr("Failed to update schedule."))
 
 search_query = st.text_input(
-    "Search schedules",
-    placeholder="Search by class or coach name",
+    tr("Search schedules"),
+    placeholder=tr("Search by class or coach name"),
     icon=":material/search:",
 ).strip().casefold()
 
 list_of_classes = firebase.getClasses(userToken)
 if list_of_classes is None:
-    st.error("Failed to retrieve class schedules.")
+    st.error(tr("Failed to retrieve class schedules."))
 else:
     accounts = firebase.getAccounts(userToken) or {}
     matching_classes = []
@@ -126,7 +130,7 @@ else:
         owner_id = class_data.get("classOwner")
         coach = accounts.get(owner_id) or {}
         coach_name = coach.get("name") or (
-            f"Coach ({owner_id})" if owner_id else "Unassigned coach"
+            f"{tr('Coach')} ({owner_id})" if owner_id else tr("Unassigned coach")
         )
         if (
             not search_query
@@ -136,7 +140,7 @@ else:
             matching_classes.append((class_name, class_data, coach_name))
 
     if not matching_classes:
-        st.info("No schedules match your search.")
+        st.info(tr("No schedules match your search."))
     else:
         for class_name, class_data, coach_name in matching_classes:
             classCard(class_name, class_data, coach_name)

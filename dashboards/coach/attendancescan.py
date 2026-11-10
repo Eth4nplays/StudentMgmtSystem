@@ -5,9 +5,13 @@ import numpy as np
 import streamlit as st
 
 from helpers import cookies, firebase
+from helpers.localization import normalize_language, translate
 
-st.header("Attendance Scanner")
-st.write(f"Scan your QR code for your attendance on {st.session_state['selected_class']}")
+language = normalize_language(st.session_state["profile"].get("language"))
+tr = lambda text: translate(text, language)
+
+st.header(tr("Attendance Scanner"))
+st.write(f"{tr('Scan your QR code for your attendance on')} {st.session_state['selected_class']}")
 image = st.camera_input(" ")
 
 if cookies.getCookies("token") != None:
@@ -35,6 +39,6 @@ if image is not None:
                 )
         
         if result:
-            st.success(f"Attendance recorded for {name} on {date_str}.")
+            st.success(f"{tr('Attendance recorded for')} {name} {tr('on')} {date_str}.")
         else:
-            st.error("Failed to submit attendance. Please try again.")
+            st.error(tr("Failed to submit attendance. Please try again."))

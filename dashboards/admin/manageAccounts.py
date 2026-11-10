@@ -4,8 +4,12 @@ import streamlit as st
 import helpers.firebase as firebase
 import helpers.cookies as cookies
 from io import BytesIO
+from helpers.localization import normalize_language, translate
 
-st.page_link("dashboards/admin.py", label="Back", icon=":material/arrow_back:")
+language = normalize_language(st.session_state["profile"].get("language"))
+tr = lambda text: translate(text, language)
+
+st.page_link("dashboards/admin.py", label=tr("Back"), icon=":material/arrow_back:")
 
 if cookies.getCookies("token") != None:
         userToken = cookies.getCookies("token")
@@ -15,17 +19,14 @@ else:
 def fetchAccounts():
     return firebase.getAccounts(id_token=userToken)
 
-@st.dialog("Upload Accounts csv")
+@st.dialog(tr("Upload Accounts csv"))
 def accountbulkupload():
-    st.download_button("Download CSV Template", data="name,email,password,role\nJohn Doe,john.doe@example.com,Abc123,student\nJane Smith,jane.smith@example.com,Abc123,coach", file_name="account_template.csv", mime="text/csv")
+    st.download_button(tr("Download CSV Template"), data="name,email,password,role\nJohn Doe,john.doe@example.com,Abc123,student\nJane Smith,jane.smith@example.com,Abc123,coach", file_name="account_template.csv", mime="text/csv")
 
-    accountbulkcsv = st.file_uploader("Upload CSV", type = "csv")
-    if st.button("Upload", type='primary', icon=":material/upload:"):
+    accountbulkcsv = st.file_uploader(tr("Upload CSV"), type = "csv")
+    if st.button(tr("Upload"), type='primary', icon=":material/upload:"):
         if accountbulkcsv is not None:
             dataframe = pd.read_csv(accountbulkcsv)
-
-            st.spinner("Uploading accounts...")
-
             for i in range(len(dataframe)):
                 name = str(dataframe.iloc[i]["name"])
                 email = str(dataframe.iloc[i]["email"])
@@ -41,9 +42,9 @@ def accountbulkupload():
                     firebase.setData(uid=newAccount["localId"], id_token=newAccount["idToken"], role=role.lower(), name=name, email=email.strip())
             st.rerun()
         
-@st.dialog("QR Code")
+@st.dialog(tr("QR Code"))
 def showqr(selectUid, name):
-    st.write("You may print this QR code for students/coaches")
+    st.write(tr("You may print this QR code for students/coaches"))
     qrData = f"{selectUid} {name}"
 
     qr_img = qrcode.make(qrData)
@@ -57,55 +58,55 @@ def showqr(selectUid, name):
     
 
     st.download_button(
-        label="Download QR Code",
+        label=tr("Download QR Code"),
         data=byte_im,
         file_name=f"{name}-QR.png",
         mime="image/png"
     )
 
-@st.dialog("Create account")
+@st.dialog(tr("Create account"))
 def createAccount():
     user_types = {
-    "Coach": "coach",
-    "Student/Parent": "student"
+    tr("Coach"): "coach",
+    tr("Student/Parent"): "student"
     }
 
     selected = st.segmented_control(
-        "User Type",
+        tr("User Type"),
         options=list(user_types.keys()),
-        default="Coach"
+        default=tr("Coach")
     )
 
     accType = user_types[selected]
-    accName = st.text_input("Name")
-    accEmail = st.text_input("Email", validate=("^[^@]+@[^@]+.[^@]+$", "Must be a valid email"))
-    accPassword = st.text_input("Temporary Password", validate=("^.{6,}$", "Password must have 6 characters"))
-    if st.button("Create Account", type="primary"):
+    accName = st.text_input(tr("Name"))
+    accEmail = st.text_input(tr("Email"), validate=("^[^@]+@[^@]+.[^@]+$", tr("Must be a valid email")))
+    accPassword = st.text_input(tr("Temporary Password"), validate=("^.{6,}$", tr("Password must have 6 characters")))
+    if st.button(tr("Create Account"), type="primary"):
         if accType!="" and accEmail!="" and accName!="" and accPassword!="":
             newAccount = firebase.createAccount(email=accEmail.strip(), password=accPassword.strip())
             firebase.setData(uid=newAccount["localId"], id_token=newAccount["idToken"], role=accType, name=accName, email=accEmail.strip())
             st.rerun()
         else:
-            st.error("All of the fields must be filled in before creating an account")
+            st.error(tr("All of the fields must be filled in before creating an account"))
 
-@st.dialog("Delete account")
+@st.dialog(tr("Delete account"))
 def deleteAccount(accName, uid):
-    st.write(f"Are you sure you want to delete {accName}?")
+    st.write(f"{tr('Are you sure you want to delete')} {accName}?")
     with st.container(horizontal=True, vertical_alignment="center"):
-        if st.button("Yes"):
+        if st.button(tr("Yes")):
             firebase.deleteAccount(uid=uid)
             firebase.deleteData(uid=uid, id_token=userToken)
             st.rerun()
-        elif st.button("No", type="primary"):
+        elif st.button(tr("No"), type="primary"):
             st.rerun()
-@st.dialog("Reset Password")
+@st.dialog(tr("Reset Password"))
 def resetAccountPassword(accEmail):
-     st.write(f"Are you sure you want to reset {accEmail}?")
+     st.write(f"{tr('Are you sure you want to reset')} {accEmail}?")
      with st.container(horizontal=True, vertical_alignment="center"):
-             if st.button("Yes"):
+             if st.button(tr("Yes")):
                  firebase.resetPassword(accEmail)
                  st.rerun()
-             elif st.button("No", type="primary"):
+             elif st.button(tr("No"), type="primary"):
                  st.rerun()
 
 def accountCard(uid, account):
@@ -113,36 +114,36 @@ def accountCard(uid, account):
         with st.container(horizontal=True, vertical_alignment="center"):
             st.subheader(account["name"])
             st.write(account["email"])
-            action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=["Delete Account","Reset Password", "Show QR"], key=f"menu{account["name"]}")
-            if action == "Delete Account":
+            action = st.menu_button("", type="tertiary", icon=":material/more_vert:",options=[tr("Delete Account"), tr("Reset Password"), tr("Show QR")], key=f"menu{account["name"]}")
+            if action == tr("Delete Account"):
                 deleteAccount(account["name"], uid)
-            if action == "Reset Password":
+            if action == tr("Reset Password"):
                 resetAccountPassword(account["email"])
-            if action == "Show QR":
+            if action == tr("Show QR"):
                 showqr(uid, account["name"])
         st.caption(uid)
 
 accounts = fetchAccounts()
 
-st.title("Manage Accounts")
+st.title(tr("Manage Accounts"))
 
 with st.container(horizontal=True, vertical_alignment="center", width="content"):
-    if st.button("Create", type='primary', icon=":material/add:"):
+    if st.button(tr("Create"), type='primary', icon=":material/add:"):
             createAccount()
-    if st.button("Upload", type='primary', icon=":material/upload:"):
+    if st.button(tr("Upload"), type='primary', icon=":material/upload:"):
             accountbulkupload()
 
-    if st.button("Refresh", type='secondary', icon=":material/refresh:"):
+    if st.button(tr("Refresh"), type='secondary', icon=":material/refresh:"):
             accounts = fetchAccounts()
 
 search_query = st.text_input(
-    "Search accounts",
-    placeholder="Search by name, email, or user ID",
+    tr("Search accounts"),
+    placeholder=tr("Search by name, email, or user ID"),
     icon=":material/search:",
 ).strip().casefold()
 
 accounts = accounts or {}
-coachTab, studentTab = st.tabs(["Coaches", "Students/Parents"])
+coachTab, studentTab = st.tabs([tr("Coaches"), tr("Students/Parents")])
 
 with coachTab:
     for uid, account in accounts.items():

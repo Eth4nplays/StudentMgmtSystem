@@ -174,6 +174,19 @@ def setLastReadAnnouncement(uid, id_token, date):
 
     return None
 
+def setUserLanguage(uid, id_token, language):
+    url = (
+        f"{st.secrets['firebase']['database_url']}"
+        f"/users/{uid}.json"
+        f"?auth={id_token}"
+    )
+
+    response = requests.patch(url, json={"language": language})
+    if response.ok:
+        return response.json()
+
+    return None
+
 def setAnnouncement(id_token, roles, content, title, date):
     url = (
         f"{st.secrets['firebase']['database_url']}"

@@ -1,10 +1,14 @@
 import datetime
 import streamlit as st
 from helpers import cookies, firebase
+from helpers.localization import normalize_language, translate
 
-st.page_link("dashboards/coach.py", label="Back", icon=":material/arrow_back:")
+language = normalize_language(st.session_state["profile"].get("language"))
+tr = lambda text: translate(text, language)
 
-st.title("Room Booking")
+st.page_link("dashboards/coach.py", label=tr("Back"), icon=":material/arrow_back:")
+
+st.title(tr("Room Booking"))
 
 if cookies.getCookies("token") != None:
     userToken = cookies.getCookies("token")
@@ -16,7 +20,7 @@ if cookies.getCookies("uid") != None:
 else:
     uid = st.session_state['uid']
 
-@st.dialog("Book a Room")
+@st.dialog(tr("Book a Room"))
 def bookRoomDialog(defaultDate):
     class_data = firebase.getClasses(userToken)
     classNames = []
@@ -26,42 +30,43 @@ def bookRoomDialog(defaultDate):
                 classNames.append(className)
 
     if not classNames:
-        st.info("You do not have any classes to book a room for.")
+        st.info(tr("You do not have any classes to book a room for."))
         return
 
     selectedClass = st.selectbox(
-        "Select Class",
+        tr("Select Class"),
         sorted(classNames),
         key="room_booking_class"
     )
     bookingDate = st.date_input(
-        "Booking Date",
+        tr("Booking Date"),
         value=defaultDate,
         format="DD/MM/YYYY",
         key="room_dialog_date"
     )
     with st.container(horizontal=True):
         startTime = st.time_input(
-            "Start Time",
+            tr("Start Time"),
             value=datetime.time(9, 0),
             key="room_dialog_start"
         )
         endTime = st.time_input(
-            "End Time",
+            tr("End Time"),
             value=datetime.time(10, 0),
             key="room_dialog_end"
         )
 
     dateKey = bookingDate.strftime("%Y-%m-%d")
-    rooms = firebase.getRooms(userToken)
-    bookings = firebase.getRoomBookings(userToken, dateKey)
+    with st.spinner("Loading rooms..."):
+        rooms = firebase.getRooms(userToken)
+        bookings = firebase.getRoomBookings(userToken, dateKey)
 
     if rooms is None or bookings is None:
-        st.error("Failed to retrieve room bookings.")
+        st.error(tr("Failed to retrieve room bookings."))
     elif not rooms:
-        st.info("No rooms have been added yet.")
+        st.info(tr("No rooms have been added yet."))
     elif endTime <= startTime:
-        st.warning("The end time must be after the start time.")
+        st.warning(tr("The end time must be after the start time."))
     else:
         startKey = startTime.strftime("%H:%M")
         endKey = endTime.strftime("%H:%M")
@@ -82,21 +87,21 @@ def bookRoomDialog(defaultDate):
                             if startKey < booking["end"] and endKey > booking["start"]:
                                 isAvailable = False
                         else:
-                            st.caption("Booked (time unavailable)")
+                            st.caption(tr("Booked (time unavailable)"))
                             isAvailable = False
                 else:
-                    st.caption("No bookings")
+                    st.caption(tr("No bookings"))
 
                 if isAvailable:
                     availableRooms.append(roomName)
 
         if availableRooms:
             selectedRoom = st.selectbox(
-                "Select an available room",
+                tr("Select an available room"),
                 availableRooms,
                 key="room_dialog_selected_room"
             )
-            if st.button("Book Room", type="primary", icon=":material/meeting_room:"):
+            if st.button(tr("Book Room"), type="primary", icon=":material/meeting_room:"):
                 result = firebase.bookRoom(
                     userToken,
                     selectedRoom,
@@ -107,17 +112,17 @@ def bookRoomDialog(defaultDate):
                     selectedClass
                 )
                 if result:
-                    st.success(f"{selectedRoom} booked successfully!")
+                    st.success(f"{selectedRoom} {tr('booked successfully!')}")
                     st.rerun()
                 else:
-                    st.warning("This time is no longer available. Please select a different time or room.")
+                    st.warning(tr("This time is no longer available. Please select a different time or room."))
         else:
-            st.info("No rooms are available for this time. Please select another time.")
+            st.info(tr("No rooms are available for this time. Please select another time."))
 
 
 
 bookingDate = st.date_input(
-    "Select Date",
+    tr("Select Date"),
     value=datetime.date.today(),
     format="DD/MM/YYYY",
     key="coach_room_booking_date",
@@ -126,17 +131,17 @@ bookingDate = st.date_input(
 dateKey = bookingDate.strftime("%Y-%m-%d")
 rooms = firebase.getRooms(userToken)
 
-if st.button("Book a Room", type="primary", icon=":material/meeting_room:"):
+if st.button(tr("Book a Room"), type="primary", icon=":material/meeting_room:"):
     bookRoomDialog(bookingDate)
 
 if rooms is None:
-    st.error("Failed to retrieve rooms.")
+    st.error(tr("Failed to retrieve rooms."))
 else:
     bookings = firebase.getRoomBookings(userToken, dateKey)
     if bookings is None:
-        st.error("Failed to retrieve room bookings.")
+        st.error(tr("Failed to retrieve room bookings."))
     elif not rooms:
-        st.info("No rooms have been added yet.")
+        st.info(tr("No rooms have been added yet."))
     else:
         for roomName in sorted(rooms):
             roomBookings = bookings.get(roomName, [])
@@ -151,4 +156,4 @@ else:
                                 f"{booking.get('class', 'Unknown class')}"
                             )
                 else:
-                    st.caption("No bookings")
+                    st.caption(tr("No bookings"))
