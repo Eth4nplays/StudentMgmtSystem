@@ -3,6 +3,10 @@
 # Student Management System
 A web application for managing after-school activities with different user roles using Firebase, MongoDB and Python with Streamlit
 
+# About this Project
+This project was used for the International Innovation and Technology Summit 2026 (IITS 2026) Tech Hackathon held in Wuhan, China.
+The project achieved the champion award and gold grade for secondary group.
+
 # Features:
 - Account management
 - Classes
